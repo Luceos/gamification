@@ -12,11 +12,12 @@
  *
  */
 
-namespace Reflar\gamification\Commands;
+namespace Reflar\gamification\Api\Controllers;
 
 use Reflar\gamification\Repository\Gamification;
+use Psr\Http\Message\ServerRequestInterface;
 
-class VoteHandler
+class ConvertLikesController
 {
     /**
      * @var Gamification
@@ -32,17 +33,15 @@ class VoteHandler
     }
 
     /**
-     * @param Vote $command
+     * @param ServerRequestInterface $request
+     * @return mixed
      */
-    public function handle(Vote $command)
+    public function handle(ServerRequestInterface $request)
     {
-        $postId = $command->post_id;
-        $actor = $command->actor;
+        $actor = $request->getAttribute('actor');
 
-        if ($command->type == 'Up') {
-            $this->gamification->upvote($postId, $actor);
-        } else {
-            $this->gamification->downvote($postId, $actor);
+        if ($actor !== null && $actor->isAdmin() && $request->getMethod() === 'POST') {
+            return $this->gamification->convertLikes();
         }
     }
 }

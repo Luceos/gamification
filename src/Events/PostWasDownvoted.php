@@ -27,15 +27,22 @@ class PostWasDownvoted
     /**
      * @var User
      */
+    public $user;
+
+    /**
+     * @var User
+     */
     public $actor;
 
     /**
      * @param Post $post
+     * @param User $user
      * @param User $actor
      */
-    public function __construct(Post $post, User $actor)
+    public function __construct(Post $post, User $user, User $actor)
     {
         $this->post = $post;
+        $this->user = $user;
         $this->actor = $actor;
     }
 }

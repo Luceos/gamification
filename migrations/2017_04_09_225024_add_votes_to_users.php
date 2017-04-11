@@ -19,11 +19,13 @@ return [
     'up'   => function (Builder $schema) {
         $schema->table('users', function (Blueprint $table) {
             $table->integer('votes');
+            $table->string('rank');
         });
     },
     'down' => function (Builder $schema) {
         $schema->table('users', function (Blueprint $table) {
             $table->dropColumn('votes');
+            $table->dropColumn('rank');
         });
     },
 ];

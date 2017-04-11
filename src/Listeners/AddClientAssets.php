@@ -21,11 +21,18 @@ use Illuminate\Contracts\Events\Dispatcher;
 
 class AddClientAssets
 {
+    /**
+     * @param Dispatcher $events
+     */
     public function subscribe(Dispatcher $events)
     {
         $events->listen(ConfigureClientView::class, [$this, 'configureClientView']);
         $events->listen(ConfigureLocales::class, [$this, 'configLocales']);
     }
+
+    /**
+     * @param ConfigureClientView $event
+     */
     public function configureClientView(ConfigureClientView $event)
     {
         if ($event->isAdmin()) {
@@ -43,6 +50,10 @@ class AddClientAssets
             $event->addBootstrapper('Reflar/gamification/main');
         }
     }
+
+    /**
+     * @param ConfigureLocales $event
+     */
     public function configLocales(ConfigureLocales $event)
     {
         foreach (new DirectoryIterator(__DIR__.'/../../locale') as $file) {
