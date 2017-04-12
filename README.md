@@ -1,4 +1,6 @@
 # Flarum Gamification
-![Progress](http://progressed.io/bar/7?title=progress)
+![Progress](http://progressed.io/bar/38?title=progress)
+
+(That has no metric, it's just a guess, I like progress bars)
 
 Add gamification to your Flarum community!
