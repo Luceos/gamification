@@ -41,9 +41,12 @@ class AddRelationships
         $events->listen(PrepareApiAttributes::class, [$this, 'prepareApiAttributes']);
     }
 
+
+
     public function prepareApiAttributes(PrepareApiAttributes $event)
     {
         if ($event->isSerializer(PostSerializer::class)) {
+            $event->attributes['Points'] = $this->gamification->getPostVotes($event->model);
             $event->attributes['Upvotes'] = $this->gamification->getUpvotesForPost($event->model->id);
             $event->attributes['Downvotes'] = $this->gamification->getDownvotesForPost($event->model->id);
         }

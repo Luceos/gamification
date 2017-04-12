@@ -38,17 +38,17 @@ class AddClientAssets
         if ($event->isAdmin()) {
             $event->addAssets([
                 __DIR__.'/../../js/admin/dist/extension.js',
-                __DIR__.'/../../less/admin/extension.less',
             ]);
             $event->addBootstrapper('Reflar/gamification/main');
         }
         if ($event->isForum()) {
             $event->addAssets([
                 __DIR__.'/../../js/forum/dist/extension.js',
-                __DIR__.'/../../less/forum/extension.less',
+                __DIR__.'/../../less/forum/extension.less'
             ]);
             $event->addBootstrapper('Reflar/gamification/main');
         }
+
     }
 
     /**

@@ -14,6 +14,7 @@
 
 namespace Reflar\gamification\Listeners;
 
+use Flarum\Event\PostWarPosted;
 use Flarum\Core\Notification\NotificationSyncer;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -48,6 +49,7 @@ class RankUpUser
     public function subscribe(Dispatcher $events)
     {
         $events->listen(PostWasUpvoted::class, [$this, 'checkUser']);
+        $events->listen(PostWasPosted::class, [$this, 'addVote']);
     }
 
     /**
@@ -56,15 +58,22 @@ class RankUpUser
     public function CheckUser(PostWasUpvoted $event)
     {
         $user = $event->user;
-        $ranks = json_decode($this->settings->get('Reflar-Ranks'), true);
+        $ranks = json_decode($this->settings->get('reflar.gamification.ranks'), true);
 
         if (isset($ranks[$user->votes])) {
             $user->rank = $ranks[$user->votes];
             $user->save();
 
             $this->notifications->sync(
-                new PostLikedBlueprint($ranks[$user->votes]),
+                new RankupBlueprint($ranks[$user->votes]),
                 $user);
         }
+    }
+
+    public function addVote(PostWasPosted $event)
+    {
+        $user = $event->user;
+        $user->votes = $user->votes++;
+        $user->save();
     }
 }

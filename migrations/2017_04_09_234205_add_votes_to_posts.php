@@ -18,7 +18,7 @@ use Illuminate\Database\Schema\Builder;
 return [
     'up'   => function (Builder $schema) {
         $schema->table('posts', function (Blueprint $table) {
-            $table->integer('votes');
+            $table->integer('votes')->default(1);
         });
     },
     'down' => function (Builder $schema) {

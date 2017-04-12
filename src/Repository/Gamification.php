@@ -12,12 +12,14 @@
  *
  */
 
-namespace Reflar\Repository\gamification;
+namespace Reflar\gamification\Repository;
 
 use Flarum\Core\Post;
 use Flarum\Core\Repository\PostRepository;
+use Flarum\Core\Repository\UserRepository;
 use Flarum\Core\User;
 use Illuminate\Contracts\Events\Dispatcher;
+use Reflar\gamification\Events\PostWasUpvoted;
 use Reflar\gamification\Vote;
 
 class Gamification
@@ -114,12 +116,12 @@ class Gamification
     }
 
     /**
-     * @param $post_id
+     * @param $post
      * @return mixed
      */
-    public function getPostVotes($post_id)
+    public function getPostVotes($post)
     {
-        $post = $this->posts->findOrFail($post_id);
+        $post = $this->posts->findOrFail($post->id, $post->user );
 
         return $post->votes;
     }
@@ -140,11 +142,19 @@ class Gamification
      * @return mixed
      */
     public function getUpvotesForPost($post_id) {
-        return Vote::where([
-            ['post_id', '=', $post_id],
-            ['type' , '=', 'Up']
+        $votes = Vote::where([
+            'post_id' => $post_id,
+            'type' => 'Up'
             ])
             ->get();
+
+        foreach ($votes as $vote) {
+            unset($vote->post_id);
+            unset($vote->type);
+        }
+
+        return $votes->toArray();
+
     }
 
     /**
@@ -152,26 +162,18 @@ class Gamification
      * @return mixed
      */
     public function getDownvotesForPost($post_id) {
-        return Vote::where([
-            ['post_id', '=', $post_id],
-            ['type' , '=', 'Down']
-            ])
+        $votes = Vote::where([
+            'post_id' => $post_id,
+            'type' => 'Down'
+        ])
             ->get();
-    }
 
-    /**
-     * @return int
-     */
-    public function convertLikes()
-    {
-        $likes = DB::table('posts_likes')->get();
-        $counter = 0;
-
-        foreach($likes as $like) {
-            $this->saveVote($like->post_id, $like->user_id, 'Up');
-            $counter++;
+        foreach ($votes as $vote) {
+            unset($vote->post_id);
+            unset($vote->type);
         }
-        return $counter;
-    }
 
+        return $votes->toArray();
+
+    }
 }

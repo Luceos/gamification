@@ -19,9 +19,10 @@ use Illuminate\Database\Schema\Builder;
 return [
     'up' => function (Builder $schema) {
         $schema->create('posts_votes', function (Blueprint $table) {
-            $table->increments('post_id');
-            $table->integer('user_id');
+            $table->integer('post_id')->unsigned();
+            $table->integer('user_id')->unsigned();
             $table->string('type');
+            $table->primary(['post_id', 'user_id']);
         });
     },
     'down' => function (Builder $schema) {

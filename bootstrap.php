@@ -17,6 +17,7 @@ namespace Reflar\gamification;
 use Illuminate\Contracts\Events\Dispatcher;
 
 return function (Dispatcher $events) {
-    $events->subscribe(Listeners\AddApiAttributes::class);
+    $events->subscribe(Listeners\AddRelationships::class);
+    $events->subscribe(Listeners\RankUpUser::class);
     $events->subscribe(Listeners\AddClientAssets::class);
 };
