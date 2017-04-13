@@ -31,6 +31,7 @@ class RankupBlueprint implements BlueprintInterface
     public function __construct($rank, User $user)
     {
         $this->rank = $rank;
+        $this->user = $user;
     }
 
     /**

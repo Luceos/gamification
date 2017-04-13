@@ -9,60 +9,80 @@ export default function() {
 
     if (post.isHidden()) return;
 
-    this.isUpvoted = m.prop('')
+    let isUpvoted = app.session.user && post.upvotes().some(user => user === app.session.user);
+    let isDownvoted = app.session.user && post.downvotes().some(user => user === app.session.user);
 
-    const upvotes = post.data.attributes.Upvotes;
-    const downvotes = post.data.attributes.Downvotes;
+    console.log(isUpvoted);
 
-    let isUpvoted = '';
-    let isDownvoted = '';
-
-    upvotes.forEach(function(upvote) {
-      if (upvote.user_id == app.session.user.data.id) {
-        isUpvoted = true;
-      }
-    });
-
-    downvotes.forEach(function(downvote) {
-      if (downvote.user_id == app.session.user.data.id) {
-        isDownvoted  = true;
-      }
-    });
-
-
-    items.add('Upvote',
+    items.add('upvote',
       Button.component({
-        className: 'fa fa-arrow-up upvote',
-        style: (isUpvoted === true ? 'color:' + app.forum.attribute('themePrimaryColor') : ''),
+        icon: 'thumbs-up',
+        className: '',
+        style: isUpvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : 'color:',
         onclick: () => {
+          var upData = post.data.relationships.upvotes.data;
+          var downData = post.data.relationships.downvotes.data;
+
           isUpvoted = !isUpvoted;
 
+          isDownvoted = false;
 
-          if (isDownvoted == true) {
-            isDownvoted = false;
+          post.save({isUpvoted, isDownvoted});
+
+          upData.some((upvote, i) => {
+            if (upvote.id === app.session.user.id()) {
+              upData.splice(i, 1);
+              return true;
+            }
+          });
+
+          downData.some((downvote, i) => {
+            if (downvote.id === app.session.user.id()) {
+              downData.splice(i, 1);
+              return true;
+            }
+          });
+          console.log(isUpvoted);
+
+          if (isUpvoted) {
+            upData.unshift({type: 'users', id: app.session.user.id()});
           }
-
-
-          m.redraw();
-
         }
       })
     );
 
-    items.add('Downvote',
+    items.add('downvote',
       Button.component({
-        className: 'fa fa-arrow-down downvote',
-        style: (isDownvoted === true ? 'color:' + app.forum.attribute('themePrimaryColor') : ''),
+        icon: 'thumbs-down',
+        className: '',
+        style: isDownvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : '',
         onclick: () => {
+          var upData = post.data.relationships.upvotes.data;
+          var downData = post.data.relationships.downvotes.data;
+
           isDownvoted = !isDownvoted;
 
-          if (isUpvoted == true) {
-            isUpvoted = false;
+          isUpvoted = false;
+
+          post.save({isUpvoted, isDownvoted});
+
+          upData.some((upvote, i) => {
+            if (upvote.id === app.session.user.id()) {
+              upData.splice(i, 1);
+              return true;
+            }
+          });
+
+          downData.some((downvote, i) => {
+            if (downvote.id === app.session.user.id()) {
+              downData.splice(i, 1);
+              return true;
+            }
+          });
+
+          if (isDownvoted) {
+            downData.unshift({type: 'users', id: app.session.user.id()});
           }
-
-
-          m.redraw();
-
         }
       })
     );

@@ -19,6 +19,7 @@ use Flarum\Core\Repository\PostRepository;
 use Flarum\Core\Repository\UserRepository;
 use Flarum\Core\User;
 use Illuminate\Contracts\Events\Dispatcher;
+use Reflar\gamification\Events\PostWasDownvoted;
 use Reflar\gamification\Events\PostWasUpvoted;
 use Reflar\gamification\Vote;
 
@@ -64,7 +65,7 @@ class Gamification
      * @param $user_id
      * @param $type
      */
-    private function saveVote($post_id, $user_id, $type)
+    public function saveVote($post_id, $user_id, $type)
     {
         $vote = new Vote();
         $vote->post_id = $post_id;
@@ -79,15 +80,10 @@ class Gamification
      */
     public function upvote($post_id, User $actor)
     {
-        $post = $this->posts->findOrFail($post_id);
+        $post = $this->posts->findOrFail($post_id, $actor);
         $user = $post->user;
 
-        $user->votes = $user->votes++;
-        $user->save();
-
         $this->saveVote($post->id, $actor->id, 'Up');
-        $post->votes = $post->votes++;
-        $post->save();
 
         $this->events->fire(
             new PostWasUpvoted($post, $user, $actor)
@@ -100,15 +96,10 @@ class Gamification
      */
     public function downvote($post_id, User $actor)
     {
-        $post = $this->posts->findOrFail($post_id);
+        $post = $this->posts->findOrFail($post_id, $actor);
         $user = $post->user;
 
-        $user->votes = $user->votes--;
-        $user->save();
-
         $this->saveVote($post->id, $actor->id, 'Down');
-        $post->votes = $post->votes--;
-        $post->save();
 
         $this->events->fire(
           new PostWasDownvoted($post, $user, $actor)
@@ -121,7 +112,7 @@ class Gamification
      */
     public function getPostVotes($post)
     {
-        $post = $this->posts->findOrFail($post->id, $post->user );
+        $post = $this->posts->findOrFail($post->id, $post->user);
 
         return $post->votes;
     }
@@ -139,41 +130,14 @@ class Gamification
 
     /**
      * @param $post_id
+     * @param $user_id
      * @return mixed
      */
-    public function getUpvotesForPost($post_id) {
-        $votes = Vote::where([
+    public function findVote($post_id, $user_id) {
+        return Vote::where([
             'post_id' => $post_id,
-            'type' => 'Up'
-            ])
-            ->get();
-
-        foreach ($votes as $vote) {
-            unset($vote->post_id);
-            unset($vote->type);
-        }
-
-        return $votes->toArray();
-
+            'user_id' => $user_id
+            ])->first();
     }
 
-    /**
-     * @param $post_id
-     * @return mixed
-     */
-    public function getDownvotesForPost($post_id) {
-        $votes = Vote::where([
-            'post_id' => $post_id,
-            'type' => 'Down'
-        ])
-            ->get();
-
-        foreach ($votes as $vote) {
-            unset($vote->post_id);
-            unset($vote->type);
-        }
-
-        return $votes->toArray();
-
-    }
 }

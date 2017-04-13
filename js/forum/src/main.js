@@ -9,11 +9,11 @@ import addVoteButtons from 'Reflar/gamification/components/addVoteButtons';
 
 app.initializers.add('relar-gamification', () => {
 
-  User.prototype.Points = Model.attribute('Points');
+  User.prototype.points = Model.attribute('points');
 
-  Post.prototype.Points = Model.attribute('Points');
-  Post.prototype.Upvotes = Model.attribute('Upvotes');
-  Post.prototype.Downvotes = Model.attribute('Downvotes');
+  Post.prototype.points = Model.attribute('points');
+  Post.prototype.upvotes = Model.hasMany('upvotes');
+  Post.prototype.downvotes = Model.hasMany('downvotes');
 
   addVoteButtons();
 

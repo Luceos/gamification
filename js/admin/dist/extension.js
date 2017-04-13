@@ -13,11 +13,12 @@ System.register("Reflar/gamification/addSettingsPage", ["flarum/extend", "flarum
     };
 
     extend(AdminNav.prototype, 'items', function (items) {
-      items.add('reflar-gamification', AdminLinkButton.component(babelHelpers.defineProperty({
+      items.add('reflar-gamification', AdminLinkButton.component({
         href: app.route('reflar-gamification'),
-        icon: 'thumbs-up-o',
-        description: app.translator.trans('reflar-gamification.admin.nav.title')
-      }, "description", app.translator.trans('reflar-gamification.admin.nav.desc'))));
+        icon: 'thumbs-up',
+        children: 'Gamification',
+        description: app.translator.trans('reflar-gamification.admin.nav.desc')
+      }));
     });
   });
 
@@ -36,10 +37,10 @@ System.register("Reflar/gamification/addSettingsPage", ["flarum/extend", "flarum
 });;
 "use strict";
 
-System.register("Reflar/gamification/components/SettingsPage", ["flarum/Component", "flarum/components/Button", "flarum/utils/saveSettings", "flarum/components/Alert", "flarum/components/Select", "flarum/components/Switch"], function (_export, _context) {
+System.register("Reflar/gamification/components/SettingsPage", ["flarum/Component", "flarum/components/Button", "flarum/utils/saveSettings", "flarum/components/Alert"], function (_export, _context) {
   "use strict";
 
-  var Component, Button, saveSettings, Alert, Select, Switch, SettingsPage;
+  var Component, Button, saveSettings, Alert, SettingsPage;
   return {
     setters: [function (_flarumComponent) {
       Component = _flarumComponent.default;
@@ -49,10 +50,6 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
       saveSettings = _flarumUtilsSaveSettings.default;
     }, function (_flarumComponentsAlert) {
       Alert = _flarumComponentsAlert.default;
-    }, function (_flarumComponentsSelect) {
-      Select = _flarumComponentsSelect.default;
-    }, function (_flarumComponentsSwitch) {
-      Switch = _flarumComponentsSwitch.default;
     }],
     execute: function () {
       SettingsPage = function (_Component) {
@@ -70,7 +67,7 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
 
             this.loading = false;
 
-            this.fields = ['convertedLikes', 'defaultRank', 'amountPerPost', 'amountPerDiscussion', 'postStartAmount'];
+            this.fields = ['defaultRank', 'amountPerPost', 'amountPerDiscussion', 'postStartAmount'];
 
             // fields that are objects
             this.objects = ['ranks'];
@@ -90,20 +87,36 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
             });
 
             this.values.ranks() || (this.values.ranks = m.prop({
-              '50': 'helper'
+              '50': 'Helper'
             }));
 
             this.newRank = {
               'points': m.prop(''),
               'name': m.prop('')
             };
+
+            if (settings[this.addPrefix('ConvertedLikes')] === undefined) {
+              this.values.convertedLikes = m.prop(false);
+            } else {
+              this.values.convertedLikes = m.prop(true);
+            }
           }
         }, {
           key: "view",
           value: function view() {
             var _this3 = this;
 
-            return [m('div', { className: 'SettingsPage' }, [m('div', { className: 'container' }, [m('form', { onsubmit: this.onsubmit.bind(this) }, [m('fieldset', { className: 'SettingsPage-ranks' }, [m('legend', {}, app.translator.trans('reflar-gamification.admin.page.ranks.title')), m('label', {}, app.translator.trans('reflar-gamification.admin.page.ranks.ranks')), m('div', { className: 'Ranks--Container' }, Object.keys(this.values.ranks()).map(function (rank) {
+            return [m('div', { className: 'SettingsPage' }, [m('div', { className: 'container' }, [m('form', { onsubmit: this.onsubmit.bind(this) }, [this.values.convertedLikes() !== true ? Button.component({
+              type: 'button',
+              className: 'Button Button--warning Ranks-button',
+              children: app.translator.trans('reflar-gamification.admin.page.convert_button'),
+              onclick: function onclick() {
+                app.request({
+                  url: app.forum.attribute('apiUrl') + '/reflar/gamification/convert',
+                  method: 'POST'
+                }).then(_this3.values.convertedLikes(true));
+              }
+            }) : '', m('fieldset', { className: 'SettingsPage-ranks' }, [m('legend', {}, app.translator.trans('reflar-gamification.admin.page.ranks.title')), m('label', {}, app.translator.trans('reflar-gamification.admin.page.ranks.ranks')), m('div', { className: 'Ranks--Container' }, Object.keys(this.values.ranks()).map(function (rank) {
               return m('div', {}, [m('input', {
                 className: 'FormControl Ranks-number',
                 type: 'number',
@@ -115,44 +128,36 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
                 oninput: m.withAttr('value', _this3.updateRankName.bind(_this3, rank))
               }), Button.component({
                 type: 'button',
-                className: 'Button Button--warning',
-                children: 'x',
+                className: 'Button Button--warning Ranks-button',
+                icon: 'times',
                 onclick: _this3.deleteRank.bind(_this3, rank)
               })]);
             }), m('br'), m('div', {}, [m('input', {
-              className: 'FormControl Ranks--number',
+              className: 'FormControl Ranks-number',
               value: this.newRank.points(),
               type: 'number',
               oninput: m.withAttr('value', this.newRank.points)
             }), m('input', {
-              className: 'FormControl Ranks--name',
+              className: 'FormControl Ranks-name',
               value: this.newRank.name(),
               oninput: m.withAttr('value', this.newRank.name)
             }), Button.component({
               type: 'button',
-              className: 'Button Button--warning',
-              children: '+',
+              className: 'Button Button--warning Ranks-button',
+              icon: 'plus',
               onclick: this.addRank.bind(this)
             })])), m('div', { className: 'helpText' }, app.translator.trans('reflar-gamification.admin.page.ranks.help')), m('label', {}, app.translator.trans('reflar-gamification.admin.page.ranks.default')), m('input', {
-              className: 'FormControl',
-              value: this.values.defaultRank() || 'noob',
+              className: 'FormControl Ranks-default',
+              value: this.values.defaultRank(),
+              placeholder: 'Newbie',
               oninput: m.withAttr('value', this.values.defaultRank)
             })]), Button.component({
               type: 'submit',
-              className: 'Button Button--primary',
-              children: app.translator.trans('flagrow-upload.admin.buttons.save'),
+              className: 'Button Button--primary Ranks-save',
+              children: app.translator.trans('reflar-gamification.admin.page.save_settings'),
               loading: this.loading,
               disabled: !this.changed()
             })])])])];
-          }
-        }, {
-          key: "sendConverRequest",
-          value: function sendConverRequest() {
-            app.request({
-              url: app.forum.attribute('apiUrl') + '/reflar/gamification/convert',
-              method: 'POST',
-              data: { "do": "it" }
-            }).then(this.values.convertedLikes = 1);
           }
         }, {
           key: "updateRankPoints",

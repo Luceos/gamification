@@ -11,53 +11,81 @@ System.register('Reflar/gamification/components/addVoteButtons', ['flarum/extend
 
       if (post.isHidden()) return;
 
-      this.isUpvoted = m.prop('');
-
-      var upvotes = post.data.attributes.Upvotes;
-      var downvotes = post.data.attributes.Downvotes;
-
-      var isUpvoted = '';
-      var isDownvoted = '';
-
-      upvotes.forEach(function (upvote) {
-        if (upvote.user_id == app.session.user.data.id) {
-          isUpvoted = true;
-        }
+      var isUpvoted = app.session.user && post.upvotes().some(function (user) {
+        return user === app.session.user;
+      });
+      var isDownvoted = app.session.user && post.downvotes().some(function (user) {
+        return user === app.session.user;
       });
 
-      downvotes.forEach(function (downvote) {
-        if (downvote.user_id == app.session.user.data.id) {
-          var _isDownvoted = true;
-        }
-      });
+      console.log(isUpvoted);
 
-      items.add('Upvote', Button.component({
-        className: 'fa fa-arrow-up upvote',
-        style: isUpvoted === true ? 'color:' + app.forum.attribute('themePrimaryColor') : '',
+      items.add('upvote', Button.component({
+        icon: 'thumbs-up',
+        className: '',
+        style: isUpvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : 'color:',
         onclick: function onclick() {
+          var upData = post.data.relationships.upvotes.data;
+          var downData = post.data.relationships.downvotes.data;
+
           isUpvoted = !isUpvoted;
 
-          console.log('hio');
+          isDownvoted = false;
 
-          if (isDownvoted == true) {
-            isDownvoted = false;
+          post.save({ isUpvoted: isUpvoted, isDownvoted: isDownvoted });
+
+          upData.some(function (upvote, i) {
+            if (upvote.id === app.session.user.id()) {
+              upData.splice(i, 1);
+              return true;
+            }
+          });
+
+          downData.some(function (downvote, i) {
+            if (downvote.id === app.session.user.id()) {
+              downData.splice(i, 1);
+              return true;
+            }
+          });
+          console.log(isUpvoted);
+
+          if (isUpvoted) {
+            upData.unshift({ type: 'users', id: app.session.user.id() });
           }
-
-          m.redraw();
         }
       }));
 
-      items.add('Downvote', Button.component({
-        className: 'fa fa-arrow-down downvote',
-        style: isDownvoted === true ? 'color:' + app.forum.attribute('themePrimaryColor') : '',
+      items.add('downvote', Button.component({
+        icon: 'thumbs-down',
+        className: '',
+        style: isDownvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : '',
         onclick: function onclick() {
+          var upData = post.data.relationships.upvotes.data;
+          var downData = post.data.relationships.downvotes.data;
+
           isDownvoted = !isDownvoted;
 
-          if (isUpvoted == true) {
-            isUpvoted = false;
-          }
+          isUpvoted = false;
 
-          m.redraw();
+          post.save({ isUpvoted: isUpvoted, isDownvoted: isDownvoted });
+
+          upData.some(function (upvote, i) {
+            if (upvote.id === app.session.user.id()) {
+              upData.splice(i, 1);
+              return true;
+            }
+          });
+
+          downData.some(function (downvote, i) {
+            if (downvote.id === app.session.user.id()) {
+              downData.splice(i, 1);
+              return true;
+            }
+          });
+
+          if (isDownvoted) {
+            downData.unshift({ type: 'users', id: app.session.user.id() });
+          }
         }
       }));
     });
@@ -102,11 +130,11 @@ System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'fla
 
       app.initializers.add('relar-gamification', function () {
 
-        User.prototype.Points = Model.attribute('Points');
+        User.prototype.points = Model.attribute('points');
 
-        Post.prototype.Points = Model.attribute('Points');
-        Post.prototype.Upvotes = Model.attribute('Upvotes');
-        Post.prototype.Downvotes = Model.attribute('Downvotes');
+        Post.prototype.points = Model.attribute('points');
+        Post.prototype.upvotes = Model.hasMany('upvotes');
+        Post.prototype.downvotes = Model.hasMany('downvotes');
 
         addVoteButtons();
 
