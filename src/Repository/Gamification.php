@@ -133,11 +133,22 @@ class Gamification
      * @param $user_id
      * @return mixed
      */
-    public function findVote($post_id, $user_id) {
+    public function findVote($post_id, $user_id)
+    {
         return Vote::where([
             'post_id' => $post_id,
             'user_id' => $user_id
             ])->first();
+    }
+  
+    public function findTopThree()
+    {
+         $query = User::query()
+              ->orderBy('votes', 'desc')
+              ->take(3)
+              ->get();
+              
+         return $query;
     }
 
 }
