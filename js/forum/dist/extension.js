@@ -1,6 +1,6 @@
 'use strict';
 
-System.register('Reflar/gamification/components/addVoteButtons', ['flarum/extend', 'flarum/app', 'flarum/components/Button', 'flarum/components/CommentPost'], function (_export, _context) {
+System.register('Reflar/gamification/components/AddVoteButtons', ['flarum/extend', 'flarum/app', 'flarum/components/Button', 'flarum/components/CommentPost'], function (_export, _context) {
   "use strict";
 
   var extend, app, Button, CommentPost;
@@ -106,10 +106,223 @@ System.register('Reflar/gamification/components/addVoteButtons', ['flarum/extend
 });;
 'use strict';
 
-System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/models/Post', 'flarum/models/User', 'flarum/Model', 'flarum/components/NotificationGrid', 'Reflar/gamification/components/addVoteButtons'], function (_export, _context) {
+System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/avatar', 'flarum/Component', 'flarum/components/IndexPage', 'flarum/helpers/listItems', 'flarum/helpers/icon', 'flarum/helpers/username', 'flarum/components/UserCard'], function (_export, _context) {
   "use strict";
 
-  var extend, app, Post, User, Model, NotificationGrid, addVoteButtons;
+  var avatar, Component, IndexPage, listItems, icon, username, UserCard, RankingsPage;
+  return {
+    setters: [function (_flarumHelpersAvatar) {
+      avatar = _flarumHelpersAvatar.default;
+    }, function (_flarumComponent) {
+      Component = _flarumComponent.default;
+    }, function (_flarumComponentsIndexPage) {
+      IndexPage = _flarumComponentsIndexPage.default;
+    }, function (_flarumHelpersListItems) {
+      listItems = _flarumHelpersListItems.default;
+    }, function (_flarumHelpersIcon) {
+      icon = _flarumHelpersIcon.default;
+    }, function (_flarumHelpersUsername) {
+      username = _flarumHelpersUsername.default;
+    }, function (_flarumComponentsUserCard) {
+      UserCard = _flarumComponentsUserCard.default;
+    }],
+    execute: function () {
+      RankingsPage = function (_Component) {
+        babelHelpers.inherits(RankingsPage, _Component);
+
+        function RankingsPage() {
+          babelHelpers.classCallCheck(this, RankingsPage);
+          return babelHelpers.possibleConstructorReturn(this, (RankingsPage.__proto__ || Object.getPrototypeOf(RankingsPage)).apply(this, arguments));
+        }
+
+        babelHelpers.createClass(RankingsPage, [{
+          key: 'init',
+          value: function init() {
+            var _this2 = this;
+
+            app.current = this;
+            this.cardVisible = false;
+
+            app.request({
+              method: 'GET',
+              url: app.forum.attribute('apiUrl') + '/rankings'
+            }).then(function (response) {
+              console.log(response.data);
+              _this2.data = response.data;
+              _this2.users = [];
+              for (i = 0; i < _this2.data.length; i++) {
+                _this2.users[i] = [];
+                _this2.users[i]['user'] = _this2.findRecipient(_this2.data[i].id);
+                _this2.users[i]['class'] = i + 1;
+              }
+              console.log(_this2.users);
+              _this2.loading = false;
+              m.redraw();
+            });
+          }
+        }, {
+          key: 'view',
+          value: function view() {
+            var _this3 = this;
+
+            return m(
+              'div',
+              { className: 'RankingPage' },
+              IndexPage.prototype.hero(),
+              m(
+                'div',
+                { className: 'container' },
+                m(
+                  'nav',
+                  { className: 'IndexPage-nav sideNav', config: IndexPage.prototype.affixSidebar },
+                  m(
+                    'ul',
+                    null,
+                    listItems(IndexPage.prototype.sidebarItems().toArray())
+                  )
+                ),
+                m(
+                  'div',
+                  { className: 'sideNavOffset' },
+                  m(
+                    'table',
+                    { 'class': 'rankings' },
+                    m(
+                      'tr',
+                      null,
+                      m(
+                        'th',
+                        null,
+                        app.translator.trans('reflar-gamification.forum.ranking.rank')
+                      ),
+                      m(
+                        'th',
+                        null,
+                        app.translator.trans('reflar-gamification.forum.ranking.name')
+                      ),
+                      m(
+                        'th',
+                        null,
+                        app.translator.trans('reflar-gamification.forum.ranking.amount')
+                      )
+                    ),
+                    this.users.map(function (user) {
+
+                      console.log(user[0]);
+                      console.log(user['0']);
+                      console.log(user);
+                      console.log(user['User']);
+                      console.log(user.user);
+                      var card = '';
+
+                      if (_this3.cardVisible) {
+                        card = UserCard.component({
+                          user: user[0],
+                          className: 'UserCard--popover',
+                          controlsButtonClassName: 'Button Button--icon Button--flat'
+                        });
+                      }
+                      return [m(
+                        'tr',
+                        null,
+                        m(
+                          'td',
+                          { 'class': "rankings-" + user['class'] },
+                          icon("trophy")
+                        ),
+                        m(
+                          'td',
+                          null,
+                          m(
+                            'div',
+                            { className: 'PostUser' },
+                            m(
+                              'h3',
+                              { className: 'rankings-info' },
+                              m(
+                                'a',
+                                { href: app.route.user(user[0]), config: m.route },
+                                avatar(user[0], { className: 'info-avatar rankings-' + user[0] + '-avatar' })
+                              )
+                            ),
+                            card
+                          )
+                        ),
+                        m(
+                          'td',
+                          null,
+                          user[0].data.attributes['antoinefr-money.money']
+                        )
+                      )];
+                    })
+                  )
+                )
+              )
+            );
+          }
+        }, {
+          key: 'findRecipient',
+          value: function findRecipient(id) {
+            var promise = '';
+            app.store.find('users', id).then(function (user) {
+              return promise = user;
+            });
+            return promise;
+          }
+        }, {
+          key: 'config',
+          value: function config(isInitialized) {
+            var _this4 = this;
+
+            if (isInitialized) return;
+
+            var timeout = void 0;
+
+            this.$().on('mouseover', 'h3 a, .UserCard', function () {
+              clearTimeout(timeout);
+              timeout = setTimeout(_this4.showCard.bind(_this4), 500);
+            }).on('mouseout', 'h3 a, .UserCard', function () {
+              clearTimeout(timeout);
+              timeout = setTimeout(_this4.hideCard.bind(_this4), 250);
+            });
+          }
+        }, {
+          key: 'showCard',
+          value: function showCard() {
+            var _this5 = this;
+
+            this.cardVisible = true;
+
+            m.redraw();
+
+            setTimeout(function () {
+              return _this5.$('.UserCard').addClass('in');
+            });
+          }
+        }, {
+          key: 'hideCard',
+          value: function hideCard() {
+            var _this6 = this;
+
+            this.$('.UserCard').removeClass('in').one('transitionend webkitTransitionEnd oTransitionEnd', function () {
+              _this6.cardVisible = false;
+              m.redraw();
+            });
+          }
+        }]);
+        return RankingsPage;
+      }(Component);
+
+      _export('default', RankingsPage);
+    }
+  };
+});;
+'use strict';
+
+System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/models/Post', 'flarum/models/User', 'flarum/Model', 'flarum/components/NotificationGrid', 'Reflar/gamification/components/AddVoteButtons', 'Reflar/gamification/components/RankingsPage'], function (_export, _context) {
+  "use strict";
+
+  var extend, app, Post, User, Model, NotificationGrid, AddVoteButtons, RankingsPage;
   return {
     setters: [function (_flarumExtend) {
       extend = _flarumExtend.extend;
@@ -124,7 +337,9 @@ System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'fla
     }, function (_flarumComponentsNotificationGrid) {
       NotificationGrid = _flarumComponentsNotificationGrid.default;
     }, function (_ReflarGamificationComponentsAddVoteButtons) {
-      addVoteButtons = _ReflarGamificationComponentsAddVoteButtons.default;
+      AddVoteButtons = _ReflarGamificationComponentsAddVoteButtons.default;
+    }, function (_ReflarGamificationComponentsRankingsPage) {
+      RankingsPage = _ReflarGamificationComponentsRankingsPage.default;
     }],
     execute: function () {
 
@@ -136,7 +351,9 @@ System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'fla
         Post.prototype.upvotes = Model.hasMany('upvotes');
         Post.prototype.downvotes = Model.hasMany('downvotes');
 
-        addVoteButtons();
+        app.routes.page = { path: '/rankings', component: RankingsPage.component() };
+
+        AddVoteButtons();
 
         extend(NotificationGrid.prototype, 'notificationTypes', function (items) {
           items.add('userPromoted', {

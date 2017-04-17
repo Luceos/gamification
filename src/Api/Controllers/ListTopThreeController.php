@@ -15,6 +15,7 @@
 namespace Reflar\gamification\Api\Controllers;
 
 use Flarum\Api\Controller\AbstractCollectionController;
+use Flarum\Core\Post\Floodgate;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 use Reflar\gamification\Repository\Gamification;
@@ -31,11 +32,17 @@ class ListTopThreeController extends AbstractCollectionController
     protected $gamification;
 
     /**
+     * @var Floodgate
+     */
+    protected $floodgate;
+
+    /**
      * @param Gamification $gamification
      */
-    public function __construct(Gamification $gamification)
+    public function __construct(Gamification $gamification, Floodgate $floodgate)
     {
         $this->gamification = $gamification;
+        $this->floodgate = $floodgate;
     }
 
     /**
@@ -44,6 +51,9 @@ class ListTopThreeController extends AbstractCollectionController
      */
     protected function data(ServerRequestInterface $request, Document $document)
     {
+        if (! $request->getAttribute('bypassFloodgate')) {
+            $this->floodgate->assertNotFlooding($request->getAttribute('actor'));
+        }
         return $this->gamification->findTopThree();
     }
 }

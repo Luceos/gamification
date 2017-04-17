@@ -1,15 +1,34 @@
+import avatar from 'flarum/helpers/avatar';
 import Component from 'flarum/Component';
 import IndexPage from 'flarum/components/IndexPage';
 import listItems from 'flarum/helpers/listItems';
 import icon from 'flarum/helpers/icon';
-import avatar from 'flarum/helpers/avatar';
 import username from 'flarum/helpers/username';
-import LinkButton from 'flarum/components/LinkButton.js';
+import UserCard from 'flarum/components/UserCard';
 
-export default class RankingaPage extends Component {
-  init() {    
+export default class RankingsPage extends Component {
+  init() {
     app.current = this;
-    app.history.push('ranking');
+    this.cardVisible = false;
+
+    app.request({
+      method: 'GET',
+      url: app.forum.attribute('apiUrl') + '/rankings'
+    }).then(
+        response => {
+          console.log(response.data);
+          this.data = response.data;
+          this.users = [];
+          for (i = 0; i < this.data.length; i++) {
+            this.users[i] = [];
+            this.users[i]['user'] = this.findRecipient(this.data[i].id);
+            this.users[i]['class'] = i+1;
+          }
+          console.log(this.users);
+          this.loading = false;
+          m.redraw();
+        }
+    )
   }
 
   view() {
@@ -22,48 +41,87 @@ export default class RankingaPage extends Component {
           </nav>
 
           <div className="sideNavOffset">
-            <table class="ranking">
+            <table class="rankings">
               <tr>
-                <th>{app.translator.trans('antoinefr-money.forum.ranking.rank')}</th>
-                <th>{app.translator.trans('antoinefr-money.forum.ranking.name')}</th>
-                <th>{app.translator.trans('antoinefr-money.forum.ranking.amount')}</th>
+                <th>{app.translator.trans('reflar-gamification.forum.ranking.rank')}</th>
+                <th>{app.translator.trans('reflar-gamification.forum.ranking.name')}</th>
+                <th>{app.translator.trans('reflar-gamification.forum.ranking.amount')}</th>
               </tr>
-              <tr>
-                <td class="ranking-first">{icon("trophy")} {app.translator.trans('antoinefr-money.forum.ranking.order_first')}</td>
-                <td>
-                  {avatar(this.users[0])}
-                  <a href={app.route.user(this.users[0])}>{this.users[0].username()}</a>
-                </td>
-                <td>{this.users[0].data.attributes['antoinefr-money.money']}</td>
-              </tr>
-              <tr>
-                <td class="ranking-second">{icon("trophy")} {app.translator.trans('antoinefr-money.forum.ranking.order_second')}</td>
-                <td>
-                  {avatar(this.users[0])}
-                  <a href={app.route.user(this.users[0])}>{this.users[0].username()}</a>
-                </td>
-                <td>{this.users[0].data.attributes['antoinefr-money.money']}</td>
-              </tr>
-              <tr>
-                <td class="ranking-third">{icon("trophy")} {app.translator.trans('antoinefr-money.forum.ranking.order_third')}</td>
-                <td>
-                  {avatar(this.users[0])}
-                  <a href={app.route.user(this.users[0])}>{this.users[0].username()}</a>
-                </td>
-                <td>{this.users[0].data.attributes['antoinefr-money.money']}</td>
-              </tr>
-              <tr>
-                <td>{app.translator.trans('antoinefr-money.forum.ranking.order_other', {order: 4})}</td>
-                <td>
-                  {avatar(this.users[0])}
-                  <a href={app.route.user(this.users[0])}>{this.users[0].username()}</a>
-                </td>
-                <td>{this.users[0].data.attributes['antoinefr-money.money']}</td>
-              </tr>
+                {this.users.map((user) => {
+
+                  console.log(user[0]);
+                  console.log(user['0']);
+                  console.log(user);
+                  console.log(user['User']);
+                  console.log(user.user);
+                  let card = '';
+
+                  if (this.cardVisible) {
+                    card = UserCard.component({
+                      user: user[0],
+                      className: 'UserCard--popover',
+                      controlsButtonClassName: 'Button Button--icon Button--flat'
+                    })
+                  }
+                  return [
+                    <tr>
+                      <td class={"rankings-" + user['class']}>{icon("trophy")}</td>
+                      <td>
+                        <div className = "PostUser">
+                          <h3 className="rankings-info">
+                            <a href={app.route.user(user[0])} config={m.route}>
+                              {avatar(user[0], {className: 'info-avatar rankings-' + user[0] + '-avatar'})}
+                            </a>
+                          </h3>
+                          {card}
+                        </div>
+                      </td>
+                      <td>{user[0].data.attributes['antoinefr-money.money']}</td>
+                    </tr>
+                    ]
+                })}
             </table>
           </div>
         </div>
       </div>
     );
+  }
+
+  findRecipient(id) {
+    let promise = '';
+    app.store.find('users', id).then(user => promise = user);
+    return promise;
+  }
+
+  config(isInitialized) {
+    if (isInitialized) return;
+
+    let timeout;
+
+    this.$()
+      .on('mouseover', 'h3 a, .UserCard', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(this.showCard.bind(this), 500);
+      })
+      .on('mouseout', 'h3 a, .UserCard', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(this.hideCard.bind(this), 250);
+      });
+  }
+
+  showCard() {
+    this.cardVisible = true;
+
+    m.redraw();
+
+    setTimeout(() => this.$('.UserCard').addClass('in'));
+  }
+
+  hideCard() {
+    this.$('.UserCard').removeClass('in')
+      .one('transitionend webkitTransitionEnd oTransitionEnd', () => {
+        this.cardVisible = false;
+        m.redraw();
+      });
   }
 }

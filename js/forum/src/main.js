@@ -5,7 +5,9 @@ import User from 'flarum/models/User';
 import Model from 'flarum/Model';
 import NotificationGrid from 'flarum/components/NotificationGrid';
 
-import addVoteButtons from 'Reflar/gamification/components/addVoteButtons';
+import AddVoteButtons from 'Reflar/gamification/components/AddVoteButtons';
+import RankingsPage from 'Reflar/gamification/components/RankingsPage';
+
 
 app.initializers.add('relar-gamification', () => {
 
@@ -15,7 +17,9 @@ app.initializers.add('relar-gamification', () => {
   Post.prototype.upvotes = Model.hasMany('upvotes');
   Post.prototype.downvotes = Model.hasMany('downvotes');
 
-  addVoteButtons();
+  app.routes.page = {path: '/rankings', component: RankingsPage.component()};
+
+  AddVoteButtons();
 
   extend(NotificationGrid.prototype, 'notificationTypes', function (items) {
     items.add('userPromoted', {
