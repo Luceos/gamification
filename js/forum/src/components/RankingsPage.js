@@ -16,7 +16,6 @@ export default class RankingsPage extends Component {
       url: app.forum.attribute('apiUrl') + '/rankings'
     }).then(
         response => {
-          console.log(response.data);
           this.data = response.data;
           this.users = [];
           for (i = 0; i < this.data.length; i++) {
@@ -25,6 +24,7 @@ export default class RankingsPage extends Component {
             this.users[i]['class'] = i+1;
           }
           console.log(this.users);
+          console.log(this.users[1]);
           this.loading = false;
           m.redraw();
         }
@@ -47,18 +47,15 @@ export default class RankingsPage extends Component {
                 <th>{app.translator.trans('reflar-gamification.forum.ranking.name')}</th>
                 <th>{app.translator.trans('reflar-gamification.forum.ranking.amount')}</th>
               </tr>
-                {this.users.map((user) => {
-
-                  console.log(user[0]);
-                  console.log(user['0']);
-                  console.log(user);
-                  console.log(user['User']);
-                  console.log(user.user);
+                  {this.users.map((user) => {
+                    
+                  user['user'].then(user => {
+                    
                   let card = '';
 
                   if (this.cardVisible) {
                     card = UserCard.component({
-                      user: user[0],
+                      user,
                       className: 'UserCard--popover',
                       controlsButtonClassName: 'Button Button--icon Button--flat'
                     })
@@ -69,16 +66,17 @@ export default class RankingsPage extends Component {
                       <td>
                         <div className = "PostUser">
                           <h3 className="rankings-info">
-                            <a href={app.route.user(user[0])} config={m.route}>
-                              {avatar(user[0], {className: 'info-avatar rankings-' + user[0] + '-avatar'})}
+                            <a href={app.route.user(user)} config={m.route}>
+                              {avatar(user, {className: 'info-avatar rankings-' + user + '-avatar'})}
                             </a>
                           </h3>
                           {card}
                         </div>
                       </td>
-                      <td>{user[0].data.attributes['antoinefr-money.money']}</td>
+                      <td>{user.data.attributes['antoinefr-money.money']}</td>
                     </tr>
                     ]
+                  })
                 })}
             </table>
           </div>
@@ -88,9 +86,11 @@ export default class RankingsPage extends Component {
   }
 
   findRecipient(id) {
-    let promise = '';
-    app.store.find('users', id).then(user => promise = user);
-    return promise;
+    return app.store.find('users', id);
+  }
+
+  returnUser(user) {
+    console.log(user);
   }
 
   config(isInitialized) {

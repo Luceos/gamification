@@ -147,7 +147,6 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
               method: 'GET',
               url: app.forum.attribute('apiUrl') + '/rankings'
             }).then(function (response) {
-              console.log(response.data);
               _this2.data = response.data;
               _this2.users = [];
               for (i = 0; i < _this2.data.length; i++) {
@@ -156,6 +155,7 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
                 _this2.users[i]['class'] = i + 1;
               }
               console.log(_this2.users);
+              console.log(_this2.users[1]);
               _this2.loading = false;
               m.redraw();
             });
@@ -208,52 +208,50 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
                     ),
                     this.users.map(function (user) {
 
-                      console.log(user[0]);
-                      console.log(user['0']);
-                      console.log(user);
-                      console.log(user['User']);
-                      console.log(user.user);
-                      var card = '';
+                      user['user'].then(function (user) {
 
-                      if (_this3.cardVisible) {
-                        card = UserCard.component({
-                          user: user[0],
-                          className: 'UserCard--popover',
-                          controlsButtonClassName: 'Button Button--icon Button--flat'
-                        });
-                      }
-                      return [m(
-                        'tr',
-                        null,
-                        m(
-                          'td',
-                          { 'class': "rankings-" + user['class'] },
-                          icon("trophy")
-                        ),
-                        m(
-                          'td',
+                        var card = '';
+
+                        if (_this3.cardVisible) {
+                          card = UserCard.component({
+                            user: user,
+                            className: 'UserCard--popover',
+                            controlsButtonClassName: 'Button Button--icon Button--flat'
+                          });
+                        }
+                        return [m(
+                          'tr',
                           null,
                           m(
-                            'div',
-                            { className: 'PostUser' },
+                            'td',
+                            { 'class': "rankings-" + user['class'] },
+                            icon("trophy")
+                          ),
+                          m(
+                            'td',
+                            null,
                             m(
-                              'h3',
-                              { className: 'rankings-info' },
+                              'div',
+                              { className: 'PostUser' },
                               m(
-                                'a',
-                                { href: app.route.user(user[0]), config: m.route },
-                                avatar(user[0], { className: 'info-avatar rankings-' + user[0] + '-avatar' })
-                              )
-                            ),
-                            card
+                                'h3',
+                                { className: 'rankings-info' },
+                                m(
+                                  'a',
+                                  { href: app.route.user(user), config: m.route },
+                                  avatar(user, { className: 'info-avatar rankings-' + user + '-avatar' })
+                                )
+                              ),
+                              card
+                            )
+                          ),
+                          m(
+                            'td',
+                            null,
+                            user.data.attributes['antoinefr-money.money']
                           )
-                        ),
-                        m(
-                          'td',
-                          null,
-                          user[0].data.attributes['antoinefr-money.money']
-                        )
-                      )];
+                        )];
+                      });
                     })
                   )
                 )
@@ -263,11 +261,12 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
         }, {
           key: 'findRecipient',
           value: function findRecipient(id) {
-            var promise = '';
-            app.store.find('users', id).then(function (user) {
-              return promise = user;
-            });
-            return promise;
+            return app.store.find('users', id);
+          }
+        }, {
+          key: 'returnUser',
+          value: function returnUser(user) {
+            console.log(user);
           }
         }, {
           key: 'config',
