@@ -12,12 +12,10 @@ export default function() {
     let isUpvoted = app.session.user && post.upvotes().some(user => user === app.session.user);
     let isDownvoted = app.session.user && post.downvotes().some(user => user === app.session.user);
 
-    console.log(isUpvoted);
-
     items.add('upvote',
       Button.component({
         icon: 'thumbs-up',
-        className: '',
+        className: 'Post-vote Post-upvote',
         style: isUpvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : 'color:',
         onclick: () => {
           var upData = post.data.relationships.upvotes.data;
@@ -42,7 +40,6 @@ export default function() {
               return true;
             }
           });
-          console.log(isUpvoted);
 
           if (isUpvoted) {
             upData.unshift({type: 'users', id: app.session.user.id()});
@@ -50,15 +47,21 @@ export default function() {
         }
       })
     );
+    
+      items.add('points', (
+        <div className="Post-points">
+          {post.data.relationships.upvotes.data.length - post.data.relationships.downvotes.data.length}
+        </div>
+      ));
 
     items.add('downvote',
       Button.component({
         icon: 'thumbs-down',
-        className: '',
+        className: 'Post-vote Post-downvote',
         style: isDownvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : '',
         onclick: () => {
           var upData = post.data.relationships.upvotes.data;
-          var downData = post.data.relationships.downvotes.data;
+          var downData = post.data.relationships.downvotes.data
 
           isDownvoted = !isDownvoted;
 

@@ -49,17 +49,10 @@ export default class RankingsPage extends Component {
               </tr>
                   {this.users.map((user) => {
                     
-                  user['user'].then(user => {
+                  user['user'].then(function(user) {
                     
                   let card = '';
 
-                  if (this.cardVisible) {
-                    card = UserCard.component({
-                      user,
-                      className: 'UserCard--popover',
-                      controlsButtonClassName: 'Button Button--icon Button--flat'
-                    })
-                  }
                   return [
                     <tr>
                       <td class={"rankings-" + user['class']}>{icon("trophy")}</td>
@@ -87,10 +80,6 @@ export default class RankingsPage extends Component {
 
   findRecipient(id) {
     return app.store.find('users', id);
-  }
-
-  returnUser(user) {
-    console.log(user);
   }
 
   config(isInitialized) {

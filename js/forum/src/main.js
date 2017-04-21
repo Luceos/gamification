@@ -4,9 +4,10 @@ import Post from 'flarum/models/Post';
 import User from 'flarum/models/User';
 import Model from 'flarum/Model';
 import NotificationGrid from 'flarum/components/NotificationGrid';
+import UserCard from 'flarum/components/UserCard';
 
 import AddVoteButtons from 'Reflar/gamification/components/AddVoteButtons';
-import RankingsPage from 'Reflar/gamification/components/RankingsPage';
+// import RankingsPage from 'Reflar/gamification/components/RankingsPage';
 
 
 app.initializers.add('relar-gamification', () => {
@@ -16,8 +17,16 @@ app.initializers.add('relar-gamification', () => {
   Post.prototype.points = Model.attribute('points');
   Post.prototype.upvotes = Model.hasMany('upvotes');
   Post.prototype.downvotes = Model.hasMany('downvotes');
+  
+  extend(UserCard.prototype, 'infoItems', function(items, user) {
+    var points = this.props.user.data.attributes.Points;
+    
+    items.add('points',
+        app.translator.trans('reflar-gamification.forum.user.points', {points})
+     );
+  });
 
-  app.routes.page = {path: '/rankings', component: RankingsPage.component()};
+  // app.routes.page = {path: '/rankings', component: RankingsPage.component()};
 
   AddVoteButtons();
 

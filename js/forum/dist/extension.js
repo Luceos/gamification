@@ -18,11 +18,9 @@ System.register('Reflar/gamification/components/AddVoteButtons', ['flarum/extend
         return user === app.session.user;
       });
 
-      console.log(isUpvoted);
-
       items.add('upvote', Button.component({
         icon: 'thumbs-up',
-        className: '',
+        className: 'Post-vote Post-upvote',
         style: isUpvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : 'color:',
         onclick: function onclick() {
           var upData = post.data.relationships.upvotes.data;
@@ -47,7 +45,6 @@ System.register('Reflar/gamification/components/AddVoteButtons', ['flarum/extend
               return true;
             }
           });
-          console.log(isUpvoted);
 
           if (isUpvoted) {
             upData.unshift({ type: 'users', id: app.session.user.id() });
@@ -55,9 +52,15 @@ System.register('Reflar/gamification/components/AddVoteButtons', ['flarum/extend
         }
       }));
 
+      items.add('points', m(
+        'div',
+        { className: 'Post-points' },
+        post.data.relationships.upvotes.data.length - post.data.relationships.downvotes.data.length
+      ));
+
       items.add('downvote', Button.component({
         icon: 'thumbs-down',
-        className: '',
+        className: 'Post-vote Post-downvote',
         style: isDownvoted !== false ? 'color:' + app.forum.attribute('themePrimaryColor') : '',
         onclick: function onclick() {
           var upData = post.data.relationships.upvotes.data;
@@ -163,8 +166,6 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
         }, {
           key: 'view',
           value: function view() {
-            var _this3 = this;
-
             return m(
               'div',
               { className: 'RankingPage' },
@@ -212,13 +213,6 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
 
                         var card = '';
 
-                        if (_this3.cardVisible) {
-                          card = UserCard.component({
-                            user: user,
-                            className: 'UserCard--popover',
-                            controlsButtonClassName: 'Button Button--icon Button--flat'
-                          });
-                        }
                         return [m(
                           'tr',
                           null,
@@ -264,14 +258,9 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
             return app.store.find('users', id);
           }
         }, {
-          key: 'returnUser',
-          value: function returnUser(user) {
-            console.log(user);
-          }
-        }, {
           key: 'config',
           value: function config(isInitialized) {
-            var _this4 = this;
+            var _this3 = this;
 
             if (isInitialized) return;
 
@@ -279,32 +268,32 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
 
             this.$().on('mouseover', 'h3 a, .UserCard', function () {
               clearTimeout(timeout);
-              timeout = setTimeout(_this4.showCard.bind(_this4), 500);
+              timeout = setTimeout(_this3.showCard.bind(_this3), 500);
             }).on('mouseout', 'h3 a, .UserCard', function () {
               clearTimeout(timeout);
-              timeout = setTimeout(_this4.hideCard.bind(_this4), 250);
+              timeout = setTimeout(_this3.hideCard.bind(_this3), 250);
             });
           }
         }, {
           key: 'showCard',
           value: function showCard() {
-            var _this5 = this;
+            var _this4 = this;
 
             this.cardVisible = true;
 
             m.redraw();
 
             setTimeout(function () {
-              return _this5.$('.UserCard').addClass('in');
+              return _this4.$('.UserCard').addClass('in');
             });
           }
         }, {
           key: 'hideCard',
           value: function hideCard() {
-            var _this6 = this;
+            var _this5 = this;
 
             this.$('.UserCard').removeClass('in').one('transitionend webkitTransitionEnd oTransitionEnd', function () {
-              _this6.cardVisible = false;
+              _this5.cardVisible = false;
               m.redraw();
             });
           }
@@ -318,10 +307,10 @@ System.register('Reflar/gamification/components/RankingsPage', ['flarum/helpers/
 });;
 'use strict';
 
-System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/models/Post', 'flarum/models/User', 'flarum/Model', 'flarum/components/NotificationGrid', 'Reflar/gamification/components/AddVoteButtons', 'Reflar/gamification/components/RankingsPage'], function (_export, _context) {
+System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/models/Post', 'flarum/models/User', 'flarum/Model', 'flarum/components/NotificationGrid', 'flarum/components/UserCard', 'Reflar/gamification/components/AddVoteButtons'], function (_export, _context) {
   "use strict";
 
-  var extend, app, Post, User, Model, NotificationGrid, AddVoteButtons, RankingsPage;
+  var extend, app, Post, User, Model, NotificationGrid, UserCard, AddVoteButtons;
   return {
     setters: [function (_flarumExtend) {
       extend = _flarumExtend.extend;
@@ -335,12 +324,14 @@ System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'fla
       Model = _flarumModel.default;
     }, function (_flarumComponentsNotificationGrid) {
       NotificationGrid = _flarumComponentsNotificationGrid.default;
+    }, function (_flarumComponentsUserCard) {
+      UserCard = _flarumComponentsUserCard.default;
     }, function (_ReflarGamificationComponentsAddVoteButtons) {
       AddVoteButtons = _ReflarGamificationComponentsAddVoteButtons.default;
-    }, function (_ReflarGamificationComponentsRankingsPage) {
-      RankingsPage = _ReflarGamificationComponentsRankingsPage.default;
     }],
     execute: function () {
+      // import RankingsPage from 'Reflar/gamification/components/RankingsPage';
+
 
       app.initializers.add('relar-gamification', function () {
 
@@ -350,7 +341,15 @@ System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'fla
         Post.prototype.upvotes = Model.hasMany('upvotes');
         Post.prototype.downvotes = Model.hasMany('downvotes');
 
-        app.routes.page = { path: '/rankings', component: RankingsPage.component() };
+        extend(UserCard.prototype, 'infoItems', function (items, user) {
+          var points = this.props.user.data.attributes.Points;
+
+          console.log(points);
+
+          items.add('points', this.props.user.data.attributes.Points);
+        });
+
+        // app.routes.page = {path: '/rankings', component: RankingsPage.component()};
 
         AddVoteButtons();
 

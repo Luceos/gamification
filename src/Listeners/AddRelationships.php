@@ -25,20 +25,9 @@ use Flarum\Event\GetApiRelationship;
 use Flarum\Event\GetModelRelationship;
 use Flarum\Event\PrepareApiAttributes;
 use Illuminate\Contracts\Events\Dispatcher;
-use Reflar\gamification\Repository\Gamification;
-
 
 class AddRelationships
 {
-    /**
-     * @var Gamification
-     */
-    protected $gamification;
-
-    public function __construct(Gamification $gamification)
-    {
-        $this->gamification = $gamification;
-    }
 
     /**
      * @param Dispatcher $events
@@ -85,12 +74,8 @@ class AddRelationships
      */
     public function prepareApiAttributes(PrepareApiAttributes $event)
     {
-        if ($event->isSerializer(PostSerializer::class)) {
-            $event->attributes['Points'] = $this->gamification->getPostVotes($event->model);
-        }
-
         if ($event->isSerializer(UserSerializer::class)) {
-            $event->attributes['Points'] = $this->gamification->getUserVotes($event->model->id);
+            $event->attributes['Points'] = $event->model->votes;
         }
     }
 

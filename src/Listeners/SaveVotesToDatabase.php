@@ -14,7 +14,6 @@
 
 namespace Reflar\gamification\Listeners;
 
-use Flarum\Event\PostWasDeleted;
 use Flarum\Event\PostWillBeSaved;
 use Illuminate\Contracts\Events\Dispatcher;
 use Reflar\gamification\Repository\Gamification;
@@ -72,11 +71,9 @@ class SaveVotesToDatabase
                     if ($vote->type == 'Up')
                     {
                         $post->user->decrement('votes');
-                        $post->decrement('votes');
 
                     } else {
                         $post->user->increment('votes');
-                        $post->increment('votes');
                     }
                     $vote->delete();
 
@@ -85,7 +82,6 @@ class SaveVotesToDatabase
 
                         $vote->save();
 
-                        $post->votes = $post->votes - 2;
                         $post->user->votes = $post->user->votes - 2;
 
                 } elseif ($vote->type == 'Down') {
@@ -93,7 +89,6 @@ class SaveVotesToDatabase
 
                         $vote->save();
 
-                    $post->votes = $post->votes + 2;
                     $post->user->votes = $post->user->votes + 2;
                 }
 
@@ -101,22 +96,12 @@ class SaveVotesToDatabase
                 $this->gamification->downvote($post->id, $actor);
 
                 $post->user->decrement('votes');
-                $post->decrement('votes');
 
             } elseif ($isUpvoted == true) {
                 $this->gamification->upvote($post->id, $actor);
 
                 $post->user->decrement('votes');
-                $post->increment('votes');
             }
         }
-    }
-
-    /**
-     * @param PostWasDeleted $event
-     */
-    public function whenPostWasDeleted(PostWasDeleted $event)
-    {
-        $this->gamification->deleteVotesForPost($event->post->id);
     }
 }

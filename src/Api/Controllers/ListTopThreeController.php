@@ -24,7 +24,7 @@ use Reflar\gamificarion\Api\Serializers\TopThreeSerializer;
 class ListTopThreeController extends AbstractCollectionController
 {
   
-    public $serializer = 'Flarum\Api\Serializer\UserBasicSerializer';
+    public $serializer = 'Flarum\Api\Serializer\UserSerializer';
  
     /**
      * @var Gamification

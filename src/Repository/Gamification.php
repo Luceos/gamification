@@ -107,28 +107,6 @@ class Gamification
     }
 
     /**
-     * @param $post
-     * @return mixed
-     */
-    public function getPostVotes($post)
-    {
-        $post = $this->posts->findOrFail($post->id, $post->user);
-
-        return $post->votes;
-    }
-
-    /**
-     * @param $user_id
-     * @return mixed
-     */
-    public function getUserVotes($user_id)
-    {
-        $user = $this->users->findOrFail($user_id);
-
-        return $user->votes;
-    }
-
-    /**
      * @param $post_id
      * @param $user_id
      * @return mixed

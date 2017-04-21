@@ -88,6 +88,6 @@ class EventHandlers
 
     public function removeVote(PostWasDeleted $event)
     {
-        $event->actor->decrement('votes');
+        $event->post->user->decrement('votes');
     }
 }
