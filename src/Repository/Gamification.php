@@ -18,17 +18,10 @@ use Flarum\Core\Post;
 use Flarum\Core\Repository\PostRepository;
 use Flarum\Core\Repository\UserRepository;
 use Flarum\Core\User;
-use Illuminate\Contracts\Events\Dispatcher;
-use Reflar\gamification\Events\PostWasDownvoted;
-use Reflar\gamification\Events\PostWasUpvoted;
 use Reflar\gamification\Vote;
 
 class Gamification
 {
-    /**
-     * @var Dispatcher
-     */
-    protected $events;
 
     /**
      * @var PostRepository
@@ -41,13 +34,11 @@ class Gamification
     protected $users;
 
     /**
-     * @param Dispatcher $events
      * @param PostRepository $posts
      * @param UserRepository $users
      */
-    public function __construct(Dispatcher $events, PostRepository $posts, UserRepository $users)
+    public function __construct(PostRepository $posts, UserRepository $users)
     {
-        $this->events = $events;
         $this->posts = $posts;
         $this->users = $users;
     }
@@ -84,10 +75,6 @@ class Gamification
         $user = $post->user;
 
         $this->saveVote($post->id, $actor->id, 'Up');
-
-        $this->events->fire(
-            new PostWasUpvoted($post, $user, $actor)
-        );
     }
 
     /**
@@ -101,9 +88,6 @@ class Gamification
 
         $this->saveVote($post->id, $actor->id, 'Down');
 
-        $this->events->fire(
-          new PostWasDownvoted($post, $user, $actor)
-        );
     }
 
     /**
@@ -129,4 +113,11 @@ class Gamification
          return $query;
     }
 
+    public function convertLike($post_id, $user_id, User $actor)
+    {
+        $user = $this->users->findOrFail($user_id, $actor);
+        $user->increment('votes');
+
+        $this->upvote($post_id, $actor);
+    }
 }

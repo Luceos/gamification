@@ -75,8 +75,8 @@ class EventHandlers
             $user->save();
 
             $this->notifications->sync(
-                new RankupBlueprint($ranks[$user->votes]),
-                $user);
+                new RankupBlueprint($ranks[$user->votes], $event->actor),
+                [$user]);
         }
     }
 

@@ -16,19 +16,26 @@ namespace Reflar\gamification\Listeners;
 
 use Flarum\Event\PostWillBeSaved;
 use Illuminate\Contracts\Events\Dispatcher;
+use Reflar\gamification\Events\PostWasDownvoted;
+use Reflar\gamification\Events\PostWasUpvoted;
 use Reflar\gamification\Repository\Gamification;
 
 class SaveVotesToDatabase
 {
+    /**
+     * @var Dispatcher
+     */
+    protected $events;
 
     /**
      * @var Gamification
      */
     protected $gamification;
 
-    public function __construct(Gamification $gamification)
+    public function __construct(Gamification $gamification, Dispatcher $events)
     {
         $this->gamification = $gamification;
+        $this->events = $events;
     }
 
     /**
@@ -48,6 +55,7 @@ class SaveVotesToDatabase
         $post = $event->post;
         $data = $event->data;
         $actor = $event->actor;
+        $user = $post->user;
 
         if (isset($data['attributes']['isUpvoted'])) {
             $isUpvoted = $data['attributes']['isUpvoted'];
@@ -72,8 +80,16 @@ class SaveVotesToDatabase
                     {
                         $post->user->decrement('votes');
 
+                        $this->events->fire(
+                            new PostWasDownvoted($post, $user, $actor)
+                        );
+
                     } else {
                         $post->user->increment('votes');
+
+                        $this->events->fire(
+                            new PostWasUpvoted($post, $user, $actor)
+                        );
                     }
                     $vote->delete();
 
@@ -84,12 +100,20 @@ class SaveVotesToDatabase
 
                         $post->user->votes = $post->user->votes - 2;
 
+                        $this->events->fire(
+                            new PostWasDownvoted($post, $user, $actor)
+                        );
+
                 } elseif ($vote->type == 'Down') {
                         $vote->type = 'Up';
 
                         $vote->save();
 
-                    $post->user->votes = $post->user->votes + 2;
+                        $post->user->votes = $post->user->votes + 2;
+
+                        $this->events->fire(
+                            new PostWasUpvoted($post, $user, $actor)
+                        );
                 }
 
             } elseif ($isDownvoted == true) {
@@ -97,10 +121,18 @@ class SaveVotesToDatabase
 
                 $post->user->decrement('votes');
 
+                $this->events->fire(
+                    new PostWasDownvoted($post, $user, $actor)
+                );
+
             } elseif ($isUpvoted == true) {
                 $this->gamification->upvote($post->id, $actor);
 
-                $post->user->decrement('votes');
+                $post->user->increment('votes');
+
+                $this->events->fire(
+                    new PostWasUpvoted($post, $user, $actor)
+                );
             }
         }
     }

@@ -9,6 +9,7 @@ export default class SettingsPage extends Component {
     this.loading = false;
 
     this.fields = [
+      'convertedLikes',
       'defaultRank',
       'amountPerPost',
       'amountPerDiscussion',
@@ -45,11 +46,7 @@ export default class SettingsPage extends Component {
       'name': m.prop('')
     };
 
-    if (settings[this.addPrefix('ConvertedLikes')] === undefined){
-      this.values.convertedLikes = m.prop(false);
-    } else {
-      this.values.convertedLikes = m.prop(true);
-    }
+    console.log(this.values.convertedLikes());
   }
 
 
@@ -61,7 +58,7 @@ export default class SettingsPage extends Component {
       m('div', {className: 'SettingsPage'}, [
         m('div', {className: 'container'}, [
           m('form', {onsubmit: this.onsubmit.bind(this)}, [
-            (this.values.convertedLikes() !== true ? (
+            (this.values.convertedLikes() === undefined ? (
               Button.component({
                 type: 'button',
                 className: 'Button Button--warning Ranks-button',
@@ -70,10 +67,13 @@ export default class SettingsPage extends Component {
                   app.request({
                     url: app.forum.attribute('apiUrl') + '/reflar/gamification/convert',
                     method: 'POST'
-                  }).then(this.values.convertedLikes(true));
-                }
-              })
-            ) : ''),
+                  }).then(this.values.convertedLikes('converting'));
+                  }
+                })
+            ) : (this.values.convertedLikes() === 'converting' ? (
+                        m('label', {}, app.translator.trans('reflar-gamification.admin.page.converting'))
+           ) : (m('label', {}, app.translator.trans('reflar-gamification.admin.page.converted'))))),
+
             m('fieldset', {className: 'SettingsPage-ranks'}, [
               m('legend', {}, app.translator.trans('reflar-gamification.admin.page.ranks.title')),
               m('label', {}, app.translator.trans('reflar-gamification.admin.page.ranks.ranks')),
@@ -135,7 +135,7 @@ export default class SettingsPage extends Component {
               children: app.translator.trans('reflar-gamification.admin.page.save_settings'),
               loading: this.loading,
               disabled: !this.changed()
-            }),
+            })
           ])
         ])
       ])

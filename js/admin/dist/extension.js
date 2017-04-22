@@ -67,7 +67,7 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
 
             this.loading = false;
 
-            this.fields = ['defaultRank', 'amountPerPost', 'amountPerDiscussion', 'postStartAmount'];
+            this.fields = ['convertedLikes', 'defaultRank', 'amountPerPost', 'amountPerDiscussion', 'postStartAmount'];
 
             // fields that are objects
             this.objects = ['ranks'];
@@ -95,18 +95,14 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
               'name': m.prop('')
             };
 
-            if (settings[this.addPrefix('ConvertedLikes')] === undefined) {
-              this.values.convertedLikes = m.prop(false);
-            } else {
-              this.values.convertedLikes = m.prop(true);
-            }
+            console.log(this.values.convertedLikes());
           }
         }, {
           key: "view",
           value: function view() {
             var _this3 = this;
 
-            return [m('div', { className: 'SettingsPage' }, [m('div', { className: 'container' }, [m('form', { onsubmit: this.onsubmit.bind(this) }, [this.values.convertedLikes() !== true ? Button.component({
+            return [m('div', { className: 'SettingsPage' }, [m('div', { className: 'container' }, [m('form', { onsubmit: this.onsubmit.bind(this) }, [this.values.convertedLikes() === undefined ? Button.component({
               type: 'button',
               className: 'Button Button--warning Ranks-button',
               children: app.translator.trans('reflar-gamification.admin.page.convert_button'),
@@ -114,9 +110,9 @@ System.register("Reflar/gamification/components/SettingsPage", ["flarum/Componen
                 app.request({
                   url: app.forum.attribute('apiUrl') + '/reflar/gamification/convert',
                   method: 'POST'
-                }).then(_this3.values.convertedLikes(true));
+                }).then(_this3.values.convertedLikes('converting'));
               }
-            }) : '', m('fieldset', { className: 'SettingsPage-ranks' }, [m('legend', {}, app.translator.trans('reflar-gamification.admin.page.ranks.title')), m('label', {}, app.translator.trans('reflar-gamification.admin.page.ranks.ranks')), m('div', { className: 'Ranks--Container' }, Object.keys(this.values.ranks()).map(function (rank) {
+            }) : this.values.convertedLikes() === 'converting' ? m('label', {}, app.translator.trans('reflar-gamification.admin.page.converting')) : m('label', {}, app.translator.trans('reflar-gamification.admin.page.converted')), m('fieldset', { className: 'SettingsPage-ranks' }, [m('legend', {}, app.translator.trans('reflar-gamification.admin.page.ranks.title')), m('label', {}, app.translator.trans('reflar-gamification.admin.page.ranks.ranks')), m('div', { className: 'Ranks--Container' }, Object.keys(this.values.ranks()).map(function (rank) {
               return m('div', {}, [m('input', {
                 className: 'FormControl Ranks-number',
                 type: 'number',

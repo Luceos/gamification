@@ -15,11 +15,12 @@
 namespace Reflar\gamification\Api\Controllers;
 
 use Flarum\Core\Access\AssertPermissionTrait;
-use Flarum\Core\Repository\PostRepository;
 use Flarum\Http\Controller\ControllerInterface;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Reflar\gamification\Likes;
 use Reflar\gamification\Repository\Gamification;
+use Zend\Diactoros\Response\JsonResponse;
 
 class ConvertLikesController implements ControllerInterface
 {
@@ -36,21 +37,15 @@ class ConvertLikesController implements ControllerInterface
      */
     protected $gamification;
 
-    /**
-     * @var PostRepository
-     */
-    protected $posts;
 
     /**
      * @param SettingsRepositoryInterface $settings
-     * @param ConvertLikes $convert
-     * @param PostRepository $posts
+     * @param Gamification $gamification
      */
-    public function __construct(SettingsRepositoryInterface $settings, Gamification $gamification, PostRepository $posts)
+    public function __construct(SettingsRepositoryInterface $settings, Gamification $gamification)
     {
         $this->settings = $settings;
         $this->gamification = $gamification;
-        $this->posts = $posts;
     }
 
     /**
@@ -62,21 +57,18 @@ class ConvertLikesController implements ControllerInterface
         $actor = $request->getAttribute('actor');
 
         if ($actor !== null && $actor->isAdmin() && $request->getMethod() === 'POST' && $this->settings->get('reflar.gamification.convertedLikes') == false) {
-                $likes = app('db')->table('posts_likes')->get();
+            $likes = Likes::all();
 
-                $counter = 0;
+            $this->settings->set('reflar.gamification.convertedLikes', 'converting');
 
-                foreach ($likes as $like) {
-                    $post = $this->posts->findOrFail($like->post_id, $actor);
+            $counter = 0;
 
-                    $this->gamification->saveVote($post->id, $like->user_id, 'Up');
-
-                    $post->user->increment('votes');
-                    $post->increment('votes');
-
-                    $counter++;
-                }
-                return $counter;
+            foreach ($likes as $like) {
+                $this->gamification->convertLike($like->post_id, $like->user_id, $actor);
+                $counter++;
+            }
+            $this->settings->set('reflar.gamification.convertedLikes', 'done');
+            return new JsonResponse($counter, 200);
         }
     }
 }

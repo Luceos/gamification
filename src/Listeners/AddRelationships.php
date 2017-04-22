@@ -18,16 +18,27 @@ use Flarum\Api\Controller;
 use Flarum\Api\Serializer\PostSerializer;
 use Flarum\Api\Serializer\UserBasicSerializer;
 use Flarum\Api\Serializer\UserSerializer;
+use Flarum\Api\Serializer\ForumSerializer;
 use Flarum\Core\Post;
 use Flarum\Core\User;
 use Flarum\Event\ConfigureApiController;
 use Flarum\Event\GetApiRelationship;
 use Flarum\Event\GetModelRelationship;
 use Flarum\Event\PrepareApiAttributes;
+use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class AddRelationships
 {
+    /**
+     * @var SettingsRepositoryInterface
+     */
+    protected $settings;
+
+    public function __construct(SettingsRepositoryInterface $settings)
+    {
+        $this->settings = $settings;
+    }
 
     /**
      * @param Dispatcher $events
@@ -76,6 +87,9 @@ class AddRelationships
     {
         if ($event->isSerializer(UserSerializer::class)) {
             $event->attributes['Points'] = $event->model->votes;
+        }
+        if ($event->isSerializer(ForumSerializer::class)) {
+            $event->attributes['DefaultRank'] = $this->settings->get('reflar.gamification.defaultRank');
         }
     }
 

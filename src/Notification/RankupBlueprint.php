@@ -26,7 +26,13 @@ class RankupBlueprint implements BlueprintInterface
     public $rank;
 
     /**
+     * @var User
+     */
+    public $user;
+
+    /**
      * @param $rank
+     * @param User $user
      */
     public function __construct($rank, User $user)
     {
@@ -39,7 +45,7 @@ class RankupBlueprint implements BlueprintInterface
      */
     public function getSubject()
     {
-        return $this->rank;
+        return $this->user;
     }
 
     /**
@@ -47,6 +53,7 @@ class RankupBlueprint implements BlueprintInterface
      */
     public function getSender()
     {
+        return $this->user;
     }
 
     /**
@@ -54,6 +61,7 @@ class RankupBlueprint implements BlueprintInterface
      */
     public function getData()
     {
+        return $this->rank;
     }
 
     /**
@@ -69,5 +77,6 @@ class RankupBlueprint implements BlueprintInterface
      */
     public static function getSubjectModel()
     {
+        return User::class;
     }
 }
