@@ -76,7 +76,8 @@ class Gamification
 
         $this->saveVote($post->id, $actor->id, 'Up');
     }
-
+      
+      
     /**
      * @param $post_id
      * @param User $actor
@@ -88,6 +89,33 @@ class Gamification
 
         $this->saveVote($post->id, $actor->id, 'Down');
 
+    }
+
+    
+    /** 
+     * The Reddit hotness algorithm from https://github.com/reddit/reddit
+     * @param $discussion
+     */
+    public function calculateHotness($discussion) {
+        $date = $discussion->start_time;
+      
+	      if (is_string($date)) $date = strtotime($date);
+ 
+	      $s = $discussion->votes;
+	      $order = log10(max(abs($s), 1));
+ 
+	      if ($s > 0)
+		      $sign = 1;
+	      elseif ($s < 0)
+		      $sign = -1;
+	      else
+		      $sign = 0;
+ 
+	      $seconds = $date - 1134028003;
+ 
+	      $discussion->hotness = round($sign * $order + $seconds / 45000, 7);
+      
+        $discussion->save();
     }
 
     /**
@@ -115,9 +143,19 @@ class Gamification
 
     public function convertLike($post_id, $user_id, User $actor)
     {
-        $user = $this->users->findOrFail($user_id, $actor);
-        $user->increment('votes');
+        $user = $this->users->query()->where('id', $user_id)->first();
+        $post = $this->posts->query()->where('id', $post_id)->first();
+      
+        if ($post !== null && $user !== null) {
+      
+            $user->increment('votes');
 
-        $this->upvote($post_id, $actor);
+            if ($post->number = 1) {
+                $post->discussion->increment('votes');
+            }
+
+
+            $this->upvote($post_id, $actor);
+        }
     }
 }

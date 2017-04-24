@@ -72,7 +72,7 @@ export default class SettingsPage extends Component {
                 })
             ) : (this.values.convertedLikes() === 'converting' ? (
                         m('label', {}, app.translator.trans('reflar-gamification.admin.page.converting'))
-           ) : (m('label', {}, app.translator.trans('reflar-gamification.admin.page.converted'))))),
+           ) : (sm('label', {}, app.translator.trans('reflar-gamification.admin.page.converted', {number: this.values.convertedLikes()}))))),
 
             m('fieldset', {className: 'SettingsPage-ranks'}, [
               m('legend', {}, app.translator.trans('reflar-gamification.admin.page.ranks.title')),

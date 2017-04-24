@@ -83,6 +83,8 @@ class EventHandlers
     public function addVote(PostWasPosted $event)
     {
         $event->actor->increment('votes');
+        $event->post->discussion->increment('votes');
+        $this->gamification->calculateHotness($event->post->discussion);
         $this->gamification->upvote($event->post->id, $event->actor);
     }
 

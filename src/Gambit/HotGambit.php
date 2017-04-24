@@ -23,7 +23,7 @@ class HotGambit extends AbstractRegexGambit
     /**
      * @var string
      */
-    protected $pattern = 'is:(hot|popular)';
+    protected $pattern = 'is:hot';
 
     /**
      * @param AbstractSearch $search
@@ -32,10 +32,6 @@ class HotGambit extends AbstractRegexGambit
      */
     protected function conditions(AbstractSearch $search, array $matches, $negate)
     {
-        $actor = $search->getActor();
-
-        $search->getQuery()->sortBy(function ($query) use ($negate) {
-            die(var_dump($query));
-        });
+        $search->getQuery()->orderBy('hotness', 'desc');
     }
 }

@@ -56,6 +56,7 @@ class SaveVotesToDatabase
         $data = $event->data;
         $actor = $event->actor;
         $user = $post->user;
+        $discussion = $post->discussion;
 
         if (isset($data['attributes']['isUpvoted'])) {
             $isUpvoted = $data['attributes']['isUpvoted'];
@@ -79,6 +80,10 @@ class SaveVotesToDatabase
                     if ($vote->type == 'Up')
                     {
                         $post->user->decrement('votes');
+                      
+                        if ($post->number = 1) {
+                            $discussion->decrement('votes');
+                        }
 
                         $this->events->fire(
                             new PostWasDownvoted($post, $user, $actor)
@@ -86,6 +91,10 @@ class SaveVotesToDatabase
 
                     } else {
                         $post->user->increment('votes');
+                      
+                        if ($post->number = 1) {
+                            $discussion->increment('votes');
+                        }
 
                         $this->events->fire(
                             new PostWasUpvoted($post, $user, $actor)
@@ -99,6 +108,10 @@ class SaveVotesToDatabase
                         $vote->save();
 
                         $post->user->votes = $post->user->votes - 2;
+                  
+                        if ($post->number = 1) {
+                            $discussion->votes = $discussion->votes - 2;
+                        }
 
                         $this->events->fire(
                             new PostWasDownvoted($post, $user, $actor)
@@ -110,6 +123,10 @@ class SaveVotesToDatabase
                         $vote->save();
 
                         $post->user->votes = $post->user->votes + 2;
+                  
+                        if ($post->number = 1) {
+                            $discussion->votes = $discussion->votes + 2;
+                        }
 
                         $this->events->fire(
                             new PostWasUpvoted($post, $user, $actor)
@@ -120,6 +137,10 @@ class SaveVotesToDatabase
                 $this->gamification->downvote($post->id, $actor);
 
                 $post->user->decrement('votes');
+              
+                if ($post->number = 1) {
+                    $discussion->decrement('votes');
+                }
 
                 $this->events->fire(
                     new PostWasDownvoted($post, $user, $actor)
@@ -129,11 +150,16 @@ class SaveVotesToDatabase
                 $this->gamification->upvote($post->id, $actor);
 
                 $post->user->increment('votes');
+              
+                if ($post->number = 1) {
+                    $discussion->increment('votes');
+                }
 
                 $this->events->fire(
                     new PostWasUpvoted($post, $user, $actor)
                 );
             }
+            $this->gamification->calculateHotness($post->discussion);
         }
     }
 }

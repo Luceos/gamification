@@ -351,25 +351,33 @@ System.register('Reflar/gamification/components/UserPromotedNotification', ['fla
 });;
 'use strict';
 
-System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/models/Post', 'flarum/models/User', 'flarum/Model', 'flarum/components/NotificationGrid', 'flarum/components/UserCard', 'Reflar/gamification/components/AddVoteButtons', 'Reflar/gamification/components/UserPromotedNotification'], function (_export, _context) {
+System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/components/DiscussionList', 'flarum/models/Post', 'flarum/utils/ItemList', 'flarum/models/User', 'flarum/Model', 'flarum/components/IndexPage', 'flarum/components/NotificationGrid', 'flarum/components/UserCard', 'flarum/components/Select', 'Reflar/gamification/components/AddVoteButtons', 'Reflar/gamification/components/UserPromotedNotification'], function (_export, _context) {
   "use strict";
 
-  var extend, app, Post, User, Model, NotificationGrid, UserCard, AddVoteButtons, UserPromotedNotification;
+  var extend, app, DiscussionList, Post, ItemList, User, Model, IndexPage, NotificationGrid, UserCard, Select, AddVoteButtons, UserPromotedNotification;
   return {
     setters: [function (_flarumExtend) {
       extend = _flarumExtend.extend;
     }, function (_flarumApp) {
       app = _flarumApp.default;
+    }, function (_flarumComponentsDiscussionList) {
+      DiscussionList = _flarumComponentsDiscussionList.default;
     }, function (_flarumModelsPost) {
       Post = _flarumModelsPost.default;
+    }, function (_flarumUtilsItemList) {
+      ItemList = _flarumUtilsItemList.default;
     }, function (_flarumModelsUser) {
       User = _flarumModelsUser.default;
     }, function (_flarumModel) {
       Model = _flarumModel.default;
+    }, function (_flarumComponentsIndexPage) {
+      IndexPage = _flarumComponentsIndexPage.default;
     }, function (_flarumComponentsNotificationGrid) {
       NotificationGrid = _flarumComponentsNotificationGrid.default;
     }, function (_flarumComponentsUserCard) {
       UserCard = _flarumComponentsUserCard.default;
+    }, function (_flarumComponentsSelect) {
+      Select = _flarumComponentsSelect.default;
     }, function (_ReflarGamificationComponentsAddVoteButtons) {
       AddVoteButtons = _ReflarGamificationComponentsAddVoteButtons.default;
     }, function (_ReflarGamificationComponentsUserPromotedNotification) {
@@ -392,6 +400,49 @@ System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'fla
           items.add('points', app.translator.trans('reflar-gamification.forum.user.points', { points: this.props.user.data.attributes.Points }));
 
           items.add('rank', app.translator.trans('reflar-gamification.forum.user.rank', { rank: this.props.user.data.attributes.Points || app.forum.attribute('DefaultRank') }));
+        });
+
+        IndexPage.prototype.viewItems = function () {
+          var items = new ItemList();
+          var sortMap = app.cache.discussionList.sortMap();
+
+          var sortOptions = {};
+          for (var i in sortMap) {
+            sortOptions[i] = app.translator.trans('core.forum.index_sort.' + i + '_button');
+          }
+
+          var sort = this.params().sort;
+
+          if (sort === undefined) {
+            sort = 'Hot';
+          }
+
+          items.add('sort', Select.component({
+            options: sortOptions,
+            value: sort || Object.keys(sortMap)[0],
+            onchange: this.changeSort.bind(this)
+          }));
+
+          return items;
+        };
+
+        IndexPage.prototype.changeSort = function (sort) {
+          var params = this.params();
+
+          if (sort === 'hot') {
+            m.route('/hot');
+          } else {
+            if (sort === Object.keys(app.cache.discussionList.sortMap())[0]) {
+              delete params.sort;
+            } else {
+              params.sort = sort;
+            }
+            m.route(app.route(this.props.routeName, params));
+          }
+        };
+
+        extend(DiscussionList.prototype, 'sortMap', function (map) {
+          map.hot = 'hot';
         });
 
         // app.routes.page = {path: '/rankings', component: RankingsPage.component()};

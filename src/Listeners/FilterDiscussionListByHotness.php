@@ -18,9 +18,7 @@ namespace Reflar\gamification\Listeners;
 use Flarum\Event\ConfigureDiscussionGambits;
 use Flarum\Event\ConfigureForumRoutes;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Database\Query\Expression;
-use Illuminate\Database\Query\Builder;
-use Reflar\gamification\Gambits\HotGambit;
+use Reflar\gamification\Gambit\HotGambit;
 
 class FilterDiscussionListByHotness
 {

@@ -17,6 +17,7 @@ namespace Reflar\gamification\Api\Controllers;
 use Flarum\Core\Access\AssertPermissionTrait;
 use Flarum\Http\Controller\ControllerInterface;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Flarum\Core\Discussion;
 use Psr\Http\Message\ServerRequestInterface;
 use Reflar\gamification\Likes;
 use Reflar\gamification\Repository\Gamification;
@@ -36,7 +37,6 @@ class ConvertLikesController implements ControllerInterface
      * @var Gamification
      */
     protected $gamification;
-
 
     /**
      * @param SettingsRepositoryInterface $settings
@@ -67,7 +67,14 @@ class ConvertLikesController implements ControllerInterface
                 $this->gamification->convertLike($like->post_id, $like->user_id, $actor);
                 $counter++;
             }
-            $this->settings->set('reflar.gamification.convertedLikes', 'done');
+          
+            $discussions = Discussion::all();
+          
+            foreach ($discussions as $discussion) {
+                $this->gamification->calculateHotness($discussion);
+            }
+          
+            $this->settings->set('reflar.gamification.convertedLikes', $counter);
             return new JsonResponse($counter, 200);
         }
     }
