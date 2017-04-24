@@ -22,4 +22,5 @@ return function (Dispatcher $events) {
     $events->subscribe(Listeners\EventHandlers::class);
     $events->subscribe(Listeners\AddClientAssets::class);
     $events->subscribe(Listeners\SaveVotesToDatabase::class);
+    $events->subscribe(Listeners\FilterDiscussionListByHotness::class);
 };
