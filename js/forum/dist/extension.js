@@ -1,5 +1,196 @@
 'use strict';
 
+System.register('Reflar/gamification/components/AddAttributes', ['flarum/helpers/avatar', 'flarum/helpers/username', 'flarum/extend', 'flarum/Model', 'flarum/models/Post', 'flarum/components/PostUser', 'flarum/models/User', 'flarum/components/UserCard', 'flarum/helpers/userOnline', 'flarum/helpers/listItems'], function (_export, _context) {
+    "use strict";
+
+    var avatar, username, extend, Model, Post, PostUser, User, UserCard, userOnline, listItems;
+
+    _export('default', function () {
+        User.prototype.points = Model.attribute('points');
+        User.prototype.Rank = Model.attribute('Rank');
+
+        Post.prototype.upvotes = Model.hasMany('upvotes');
+        Post.prototype.downvotes = Model.hasMany('downvotes');
+
+        extend(UserCard.prototype, 'infoItems', function (items, user) {
+            var rank = this.props.user.data.attributes.Rank.split(': ');
+            if (rank[0] == '') {
+                rank[0] = app.forum.attribute('DefaultRank');
+            }
+            items.add('points', app.translator.trans('reflar-gamification.forum.user.points', { points: this.props.user.data.attributes.Points }));
+
+            items.add('rank', app.translator.trans('reflar-gamification.forum.user.rank', { rank: rank[0] }));
+        });
+
+        PostUser.prototype.view = function () {
+            var post = this.props.post;
+            var user = post.user();
+
+            var rank = user.Rank().split(': ');
+
+            if (rank[0] == '') {
+                rank[0] = app.forum.attribute('DefaultRank');
+            }
+
+            if (!user) {
+                return m(
+                    'div',
+                    { className: 'PostUser' },
+                    m(
+                        'h3',
+                        null,
+                        avatar(user, { className: 'PostUser-avatar' }),
+                        ' ',
+                        username(user),
+                        ' ',
+                        rank[0]
+                    )
+                );
+            }
+
+            var card = '';
+
+            if (!post.isHidden() && this.cardVisible) {
+                card = UserCard.component({
+                    user: user,
+                    className: 'UserCard--popover',
+                    controlsButtonClassName: 'Button Button--icon Button--flat'
+                });
+            }
+
+            return m(
+                'div',
+                { className: 'PostUser' },
+                userOnline(user),
+                m(
+                    'h3',
+                    null,
+                    m(
+                        'a',
+                        { href: app.route.user(user), config: m.route },
+                        avatar(user, { className: 'PostUser-avatar' }),
+                        ' ',
+                        username(user)
+                    ),
+                    m(
+                        'span',
+                        { className: 'Post-Rank', style: "color: " + rank[1] },
+                        rank[0]
+                    )
+                ),
+                m(
+                    'ul',
+                    { className: 'PostUser-badges badges' },
+                    listItems(user.badges().toArray())
+                ),
+                card
+            );
+        };
+    });
+
+    return {
+        setters: [function (_flarumHelpersAvatar) {
+            avatar = _flarumHelpersAvatar.default;
+        }, function (_flarumHelpersUsername) {
+            username = _flarumHelpersUsername.default;
+        }, function (_flarumExtend) {
+            extend = _flarumExtend.extend;
+        }, function (_flarumModel) {
+            Model = _flarumModel.default;
+        }, function (_flarumModelsPost) {
+            Post = _flarumModelsPost.default;
+        }, function (_flarumComponentsPostUser) {
+            PostUser = _flarumComponentsPostUser.default;
+        }, function (_flarumModelsUser) {
+            User = _flarumModelsUser.default;
+        }, function (_flarumComponentsUserCard) {
+            UserCard = _flarumComponentsUserCard.default;
+        }, function (_flarumHelpersUserOnline) {
+            userOnline = _flarumHelpersUserOnline.default;
+        }, function (_flarumHelpersListItems) {
+            listItems = _flarumHelpersListItems.default;
+        }],
+        execute: function () {}
+    };
+});;
+'use strict';
+
+System.register('Reflar/gamification/components/AddHotnessSort', ['flarum/extend', 'flarum/components/IndexPage', 'flarum/utils/ItemList', 'flarum/components/DiscussionList', 'flarum/components/Select'], function (_export, _context) {
+    "use strict";
+
+    var extend, IndexPage, ItemList, DiscussionList, Select;
+
+    _export('default', function () {
+        IndexPage.prototype.viewItems = function () {
+            var items = new ItemList();
+            var sortMap = app.cache.discussionList.sortMap();
+
+            var sortOptions = {};
+            for (var i in sortMap) {
+                sortOptions[i] = app.translator.trans('core.forum.index_sort.' + i + '_button');
+            }
+
+            var sort = this.params().sort;
+
+            if (this.props.routeName == 'index.filter') {
+                sort = 'hot';
+            }
+
+            items.add('sort', Select.component({
+                options: sortOptions,
+                value: sort || Object.keys(sortMap)[0],
+                onchange: this.changeSort.bind(this)
+            }));
+
+            return items;
+        };
+
+        IndexPage.prototype.changeSort = function (sort) {
+            var params = this.params();
+
+            if (sort === 'hot') {
+                m.route('/hot');
+            } else {
+                if (sort === Object.keys(app.cache.discussionList.sortMap())[0]) {
+                    delete params.sort;
+                } else {
+                    params.sort = sort;
+                }
+                if (params.filter = 'hot') {
+                    delete params.filter;
+                }
+                m.route(app.route('index', params));
+            }
+        };
+
+        extend(DiscussionList.prototype, 'sortMap', function (map) {
+            map.hot = 'hot';
+        });
+
+        extend(DiscussionList.prototype, 'requestParams', function (params) {
+            if (this.props.params.filter === 'hot') {
+                params.filter.q = ' is:hot';
+            }
+        });
+    });
+
+    return {
+        setters: [function (_flarumExtend) {
+            extend = _flarumExtend.extend;
+        }, function (_flarumComponentsIndexPage) {
+            IndexPage = _flarumComponentsIndexPage.default;
+        }, function (_flarumUtilsItemList) {
+            ItemList = _flarumUtilsItemList.default;
+        }, function (_flarumComponentsDiscussionList) {
+            DiscussionList = _flarumComponentsDiscussionList.default;
+        }, function (_flarumComponentsSelect) {
+            Select = _flarumComponentsSelect.default;
+        }],
+        execute: function () {}
+    };
+});;
+'use strict';
+
 System.register('Reflar/gamification/components/AddVoteButtons', ['flarum/extend', 'flarum/app', 'flarum/components/Button', 'flarum/components/CommentPost'], function (_export, _context) {
   "use strict";
 
@@ -332,7 +523,7 @@ System.register('Reflar/gamification/components/UserPromotedNotification', ['fla
                 }, {
                     key: 'href',
                     value: function href() {
-                        return app.route.post(this.props.notification.subject());
+                        return app.route.user(this.props.notification.subject());
                     }
                 }, {
                     key: 'content',
@@ -351,112 +542,48 @@ System.register('Reflar/gamification/components/UserPromotedNotification', ['fla
 });;
 'use strict';
 
-System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/components/DiscussionList', 'flarum/models/Post', 'flarum/utils/ItemList', 'flarum/models/User', 'flarum/Model', 'flarum/components/IndexPage', 'flarum/components/NotificationGrid', 'flarum/components/UserCard', 'flarum/components/Select', 'Reflar/gamification/components/AddVoteButtons', 'Reflar/gamification/components/UserPromotedNotification'], function (_export, _context) {
-  "use strict";
+System.register('Reflar/gamification/main', ['flarum/extend', 'flarum/app', 'flarum/components/NotificationGrid', 'Reflar/gamification/components/AddAttributes', 'Reflar/gamification/components/AddHotnessSort', 'Reflar/gamification/components/AddVoteButtons', 'Reflar/gamification/components/UserPromotedNotification'], function (_export, _context) {
+    "use strict";
 
-  var extend, app, DiscussionList, Post, ItemList, User, Model, IndexPage, NotificationGrid, UserCard, Select, AddVoteButtons, UserPromotedNotification;
-  return {
-    setters: [function (_flarumExtend) {
-      extend = _flarumExtend.extend;
-    }, function (_flarumApp) {
-      app = _flarumApp.default;
-    }, function (_flarumComponentsDiscussionList) {
-      DiscussionList = _flarumComponentsDiscussionList.default;
-    }, function (_flarumModelsPost) {
-      Post = _flarumModelsPost.default;
-    }, function (_flarumUtilsItemList) {
-      ItemList = _flarumUtilsItemList.default;
-    }, function (_flarumModelsUser) {
-      User = _flarumModelsUser.default;
-    }, function (_flarumModel) {
-      Model = _flarumModel.default;
-    }, function (_flarumComponentsIndexPage) {
-      IndexPage = _flarumComponentsIndexPage.default;
-    }, function (_flarumComponentsNotificationGrid) {
-      NotificationGrid = _flarumComponentsNotificationGrid.default;
-    }, function (_flarumComponentsUserCard) {
-      UserCard = _flarumComponentsUserCard.default;
-    }, function (_flarumComponentsSelect) {
-      Select = _flarumComponentsSelect.default;
-    }, function (_ReflarGamificationComponentsAddVoteButtons) {
-      AddVoteButtons = _ReflarGamificationComponentsAddVoteButtons.default;
-    }, function (_ReflarGamificationComponentsUserPromotedNotification) {
-      UserPromotedNotification = _ReflarGamificationComponentsUserPromotedNotification.default;
-    }],
-    execute: function () {
-      // import RankingsPage from 'Reflar/gamification/components/RankingsPage';
+    var extend, app, NotificationGrid, AddAttributes, AddHotnessFilter, AddVoteButtons, UserPromotedNotification;
+    return {
+        setters: [function (_flarumExtend) {
+            extend = _flarumExtend.extend;
+        }, function (_flarumApp) {
+            app = _flarumApp.default;
+        }, function (_flarumComponentsNotificationGrid) {
+            NotificationGrid = _flarumComponentsNotificationGrid.default;
+        }, function (_ReflarGamificationComponentsAddAttributes) {
+            AddAttributes = _ReflarGamificationComponentsAddAttributes.default;
+        }, function (_ReflarGamificationComponentsAddHotnessSort) {
+            AddHotnessFilter = _ReflarGamificationComponentsAddHotnessSort.default;
+        }, function (_ReflarGamificationComponentsAddVoteButtons) {
+            AddVoteButtons = _ReflarGamificationComponentsAddVoteButtons.default;
+        }, function (_ReflarGamificationComponentsUserPromotedNotification) {
+            UserPromotedNotification = _ReflarGamificationComponentsUserPromotedNotification.default;
+        }],
+        execute: function () {
+            // import RankingsPage from 'Reflar/gamification/components/RankingsPage';
 
 
-      app.initializers.add('reflar-gamification', function () {
+            app.initializers.add('reflar-gamification', function () {
 
-        app.notificationComponents.userPromoted = UserPromotedNotification;
+                app.notificationComponents.userPromoted = UserPromotedNotification;
 
-        User.prototype.points = Model.attribute('points');
+                // app.routes.page = {path: '/rankings', component: RankingsPage.component()};
 
-        Post.prototype.upvotes = Model.hasMany('upvotes');
-        Post.prototype.downvotes = Model.hasMany('downvotes');
+                AddVoteButtons();
+                AddHotnessFilter();
+                AddAttributes();
 
-        extend(UserCard.prototype, 'infoItems', function (items, user) {
-          items.add('points', app.translator.trans('reflar-gamification.forum.user.points', { points: this.props.user.data.attributes.Points }));
-
-          items.add('rank', app.translator.trans('reflar-gamification.forum.user.rank', { rank: this.props.user.data.attributes.Points || app.forum.attribute('DefaultRank') }));
-        });
-
-        IndexPage.prototype.viewItems = function () {
-          var items = new ItemList();
-          var sortMap = app.cache.discussionList.sortMap();
-
-          var sortOptions = {};
-          for (var i in sortMap) {
-            sortOptions[i] = app.translator.trans('core.forum.index_sort.' + i + '_button');
-          }
-
-          var sort = this.params().sort;
-
-          if (sort === undefined) {
-            sort = 'Hot';
-          }
-
-          items.add('sort', Select.component({
-            options: sortOptions,
-            value: sort || Object.keys(sortMap)[0],
-            onchange: this.changeSort.bind(this)
-          }));
-
-          return items;
-        };
-
-        IndexPage.prototype.changeSort = function (sort) {
-          var params = this.params();
-
-          if (sort === 'hot') {
-            m.route('/hot');
-          } else {
-            if (sort === Object.keys(app.cache.discussionList.sortMap())[0]) {
-              delete params.sort;
-            } else {
-              params.sort = sort;
-            }
-            m.route(app.route(this.props.routeName, params));
-          }
-        };
-
-        extend(DiscussionList.prototype, 'sortMap', function (map) {
-          map.hot = 'hot';
-        });
-
-        // app.routes.page = {path: '/rankings', component: RankingsPage.component()};
-
-        AddVoteButtons();
-
-        extend(NotificationGrid.prototype, 'notificationTypes', function (items) {
-          items.add('userPromoted', {
-            name: 'userPromoted',
-            icon: 'arrow-up',
-            label: app.translator.trans('reflar-gamification.forum.notification.notify_user_promoted_label')
-          });
-        });
-      });
-    }
-  };
+                extend(NotificationGrid.prototype, 'notificationTypes', function (items) {
+                    items.add('userPromoted', {
+                        name: 'userPromoted',
+                        icon: 'arrow-up',
+                        label: app.translator.trans('reflar-gamification.forum.notification.notify_user_promoted_label')
+                    });
+                });
+            });
+        }
+    };
 });

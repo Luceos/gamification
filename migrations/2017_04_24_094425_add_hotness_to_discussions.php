@@ -18,8 +18,8 @@ use Illuminate\Database\Schema\Builder;
 return [
     'up'   => function (Builder $schema) {
         $schema->table('discussions', function (Blueprint $table) {
-            $table->integer('votes')->default(1);
-            $table->float('hotness');
+            $table->integer('votes');
+            $table->float('hotness', 10, 4);
         });
     },
     'down' => function (Builder $schema) {

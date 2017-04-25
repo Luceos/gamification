@@ -6,7 +6,7 @@ export default class UserPromotedNotification extends Notification {
     }
 
     href() {
-        return app.route.post(this.props.notification.subject());
+        return app.route.user(this.props.notification.subject());
     }
 
     content() {

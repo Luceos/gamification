@@ -76,8 +76,8 @@ class Gamification
 
         $this->saveVote($post->id, $actor->id, 'Up');
     }
-      
-      
+
+
     /**
      * @param $post_id
      * @param User $actor
@@ -91,30 +91,29 @@ class Gamification
 
     }
 
-    
-    /** 
+
+    /**
      * The Reddit hotness algorithm from https://github.com/reddit/reddit
      * @param $discussion
      */
-    public function calculateHotness($discussion) {
-        $date = $discussion->start_time;
-      
-	      if (is_string($date)) $date = strtotime($date);
- 
-	      $s = $discussion->votes;
-	      $order = log10(max(abs($s), 1));
- 
-	      if ($s > 0)
-		      $sign = 1;
-	      elseif ($s < 0)
-		      $sign = -1;
-	      else
-		      $sign = 0;
- 
-	      $seconds = $date - 1134028003;
- 
-	      $discussion->hotness = round($sign * $order + $seconds / 45000, 7);
-      
+    public function calculateHotness($discussion)
+    {
+        $date = strtotime($discussion->start_time);
+
+        $s = $discussion->votes;
+        $order = log10(max(abs($s), 1));
+
+        if ($s > 0)
+            $sign = 1;
+        elseif ($s < 0)
+            $sign = -1;
+        else
+            $sign = 0;
+
+        $seconds = $date - 1134028003;
+
+        $discussion->hotness = round($sign * $order + $seconds / 45000, 10);
+
         $discussion->save();
     }
 
@@ -128,26 +127,38 @@ class Gamification
         return Vote::where([
             'post_id' => $post_id,
             'user_id' => $user_id
-            ])->first();
-    }
-  
-    public function findTopThree()
-    {
-         $query = User::query()
-              ->orderBy('votes', 'desc')
-              ->take(3)
-              ->get();
-              
-         return $query;
+        ])->first();
     }
 
+    /**
+     * @return mixed
+     */
+    public function findTopThree()
+    {
+        $query = User::query()
+            ->orderBy('votes', 'desc')
+            ->take(3)
+            ->get();
+
+        return $query;
+    }
+
+    public function findColorForRank($rank) {
+
+    }
+
+    /**
+     * @param $post_id
+     * @param $user_id
+     * @param User $actor
+     */
     public function convertLike($post_id, $user_id, User $actor)
     {
         $user = $this->users->query()->where('id', $user_id)->first();
         $post = $this->posts->query()->where('id', $post_id)->first();
-      
+
         if ($post !== null && $user !== null) {
-      
+
             $user->increment('votes');
 
             if ($post->number = 1) {

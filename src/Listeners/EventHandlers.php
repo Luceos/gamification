@@ -64,9 +64,33 @@ class EventHandlers
     /**
      * @param PostWasUpvoted $event
      */
-    public function CheckUser(PostWasUpvoted $event)
+    public function checkUser(PostWasUpvoted $event)
     {
-        $user = $event->user;
+        $this->checkUserVotes($event->user, $event->actor);
+    }
+
+    /**
+     * @param PostWasPosted $event
+     */
+    public function addVote(PostWasPosted $event)
+    {
+        $event->actor->increment('votes');
+        $event->post->discussion->increment('votes');
+        $this->gamification->calculateHotness($event->post->discussion);
+        $this->gamification->upvote($event->post->id, $event->actor);
+
+        $this->checkUserVotes($event->actor, $event->actor);
+    }
+
+    /**
+     * @param PostWasDeleted $event
+     */
+    public function removeVote(PostWasDeleted $event)
+    {
+        $event->post->user->decrement('votes');
+    }
+
+    protected function checkUserVotes($user, $actor) {
 
         $ranks = json_decode($this->settings->get('reflar.gamification.ranks'), true);
 
@@ -75,21 +99,8 @@ class EventHandlers
             $user->save();
 
             $this->notifications->sync(
-                new RankupBlueprint($ranks[$user->votes], $event->actor),
+                new RankupBlueprint($ranks[$user->votes], $actor),
                 [$user]);
         }
-    }
-
-    public function addVote(PostWasPosted $event)
-    {
-        $event->actor->increment('votes');
-        $event->post->discussion->increment('votes');
-        $this->gamification->calculateHotness($event->post->discussion);
-        $this->gamification->upvote($event->post->id, $event->actor);
-    }
-
-    public function removeVote(PostWasDeleted $event)
-    {
-        $event->post->user->decrement('votes');
     }
 }

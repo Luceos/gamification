@@ -87,6 +87,7 @@ class AddRelationships
     {
         if ($event->isSerializer(UserSerializer::class)) {
             $event->attributes['Points'] = $event->model->votes;
+            $event->attributes['Rank'] = $event->model->rank;
         }
         if ($event->isSerializer(ForumSerializer::class)) {
             $event->attributes['DefaultRank'] = $this->settings->get('reflar.gamification.defaultRank');

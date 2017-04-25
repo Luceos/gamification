@@ -1,9 +1,9 @@
-import { extend } from 'flarum/extend';
+import {extend} from 'flarum/extend';
 import app from 'flarum/app';
 import Button from 'flarum/components/Button';
 import CommentPost from 'flarum/components/CommentPost';
 
-export default function() {
+export default function () {
   extend(CommentPost.prototype, 'actionItems', function(items) {
     const post = this.props.post;
 
